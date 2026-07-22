@@ -1,0 +1,36 @@
+@import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: #0b0d10;
+  font-family: "Inter", sans-serif;
+  margin: 0;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.status-strip-bg {
+  background: repeating-linear-gradient(135deg, #1a1e24, #1a1e24 10px, #17191d 10px, #17191d 20px);
+}
+
+.map-glow {
+  background: radial-gradient(circle at 30% 30%, rgba(255, 106, 61, 0.18), transparent 55%),
+    linear-gradient(160deg, #1a2029, #10141a);
+}
+
+.track-map-bg {
+  background: linear-gradient(160deg, #1a2029, #10141a);
+}
