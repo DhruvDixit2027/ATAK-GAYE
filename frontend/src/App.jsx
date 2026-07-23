@@ -6,9 +6,15 @@ import IssueSelectScreen from "./components/IssueSelectScreen";
 import AIMatchingScreen from "./components/AIMatchingScreen";
 import TrackingScreen from "./components/TrackingScreen";
 import DoneScreen from "./components/DoneScreen";
+import UserDetailsScreen from "./components/UserDetailsScreen"; // 👈 naya import
 
 function ScreenRouter() {
-  const { screen } = useApp();
+  const { screen, user } = useApp(); // 👈 user bhi lo
+
+  // 👇 agar user ki details save nahi hain, to sabse pehle wahi form dikhao
+  if (!user) {
+    return <UserDetailsScreen />;
+  }
 
   switch (screen) {
     case "home":

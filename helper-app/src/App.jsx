@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import RequestList from './components/RequestList';
+import HelperDetailsScreen from './components/HelperDetailsScreen';
 import './index.css';
 
-// TEMP: hardcoded logged-in helper ID for demo.
-// Once login/auth is built, this will come from the session.
-const DEMO_HELPER_ID = '000000000000000000000001';
-
 export default function App() {
-  const [helperId] = useState(DEMO_HELPER_ID);
+  // Pehle localStorage check karo — agar helper pehle se registered hai to seedha use karo
+  const [helper, setHelper] = useState(() => {
+    const saved = localStorage.getItem("atakGayeHelper");
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  // Agar helper registered nahi hai, to sabse pehle details form dikhao
+  if (!helper) {
+    return <HelperDetailsScreen onRegistered={setHelper} />;
+  }
 
   return (
     <div className="app-shell">
@@ -20,7 +26,7 @@ export default function App() {
       </header>
 
       <main className="app-main">
-        <RequestList helperId={helperId} />
+        <RequestList helperId={helper._id} />
       </main>
     </div>
   );

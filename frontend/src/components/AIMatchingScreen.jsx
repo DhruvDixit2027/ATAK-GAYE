@@ -2,11 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useApp } from "../context/AppContext";
 
 export default function AIMatchingScreen() {
-  const { goTo, selectedIssue, setWinner } = useApp();
+  const { goTo, selectedIssue, setWinner, user } = useApp();
   const [candidates, setCandidates] = useState([]);
   const [revealedScores, setRevealedScores] = useState(false);
   const [showWinner, setShowWinner] = useState(false);
   const [statusText, setStatusText] = useState("Nearby helpers scan ho rahe hain...");
+
+  // 👇 Naya: user manually kisko select karta hai, wo yahan track hota hai.
+  // null hone ka matlab hai "AI ke default winner (candidates[0]) ko hi use karo"
+  const [selectedId, setSelectedId] = useState(null);
 
   useEffect(() => {
     let scoreTimer;
@@ -40,6 +44,7 @@ export default function AIMatchingScreen() {
         setCandidates(ranked);
         setRevealedScores(false);
         setShowWinner(false);
+        setSelectedId(null); // naya match cycle shuru hote hi selection reset karo
         setStatusText("Nearby helpers scan ho rahe hain...");
 
         scoreTimer = setTimeout(() => setRevealedScores(true), ranked.length * 150 + 200);
@@ -63,20 +68,38 @@ export default function AIMatchingScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIssue]);
 
-  const winnerData = candidates[0];
+  // Jo bhi currently "chosen" hai — ya to user ne manually select kiya, ya AI ka default winner
+  const chosenData = selectedId
+    ? candidates.find((c) => c.id === selectedId)
+    : candidates[0];
 
-  // 👇 NAYA FUNCTION — backend mein request create karta hai
+  // User kisi bhi card pe click karke apni pasand badal sake
+  const handleSelectCandidate = (helper) => {
+    if (!showWinner) return; // scores reveal hone se pehle select karna allow mat karo
+    setSelectedId(helper.id);
+    setWinner(helper); // context mein bhi update ho jaaye, taaki tracking screen isi ko use kare
+  };
+
+  // Backend mein request create karta hai — jo bhi currently chosen hai, usी ke liye
   const handleConfirmRequest = async () => {
+    if (!user || !user._id) {
+      console.error("User details missing, request create nahi ho sakti");
+      goTo("tracking"); // fallback, taaki UI atke nahi
+      return;
+    }
+    if (!chosenData) return;
+
     try {
       const res = await fetch("http://localhost:5000/api/requests/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          helperId: winnerData._id,
+          userId: user._id,
+          helperId: chosenData.id,
           issueType: selectedIssue || "mechanic",
           userLocation: { lat: 26.4499, lng: 80.3319 },
-          matchScore: winnerData.matchPercent,
-          estimatedArrivalMin: winnerData.etaMin,
+          matchScore: chosenData.matchPercent,
+          estimatedArrivalMin: chosenData.etaMin,
         }),
       });
       const data = await res.json();
@@ -88,13 +111,13 @@ export default function AIMatchingScreen() {
     }
   };
 
-  const reasons = winnerData
+  const reasons = chosenData
     ? [
-        { label: "Distance", pct: Math.round(winnerData.distScore * 100), sub: `${winnerData.distanceKm} km door` },
-        { label: "Rating", pct: Math.round(winnerData.ratingScore * 100), sub: `⭐ ${winnerData.rating}` },
-        { label: "Skill match", pct: Math.round(winnerData.skillScore * 100), sub: `${Math.round(winnerData.skillScore * 100)}% required skill` },
-        { label: "Availability", pct: Math.round(winnerData.availScore * 100), sub: `${Math.round(winnerData.availScore * 100)}% free abhi` },
-        { label: "Success rate", pct: Math.round(winnerData.successScore * 100), sub: `${Math.round(winnerData.successScore * 100)}% past jobs solved` },
+        { label: "Distance", pct: Math.round(chosenData.distScore * 100), sub: `${chosenData.distanceKm} km door` },
+        { label: "Rating", pct: Math.round(chosenData.ratingScore * 100), sub: `⭐ ${chosenData.rating}` },
+        { label: "Skill match", pct: Math.round(chosenData.skillScore * 100), sub: `${Math.round(chosenData.skillScore * 100)}% required skill` },
+        { label: "Availability", pct: Math.round(chosenData.availScore * 100), sub: `${Math.round(chosenData.availScore * 100)}% free abhi` },
+        { label: "Success rate", pct: Math.round(chosenData.successScore * 100), sub: `${Math.round(chosenData.successScore * 100)}% past jobs solved` },
       ]
     : [];
 
@@ -121,17 +144,24 @@ export default function AIMatchingScreen() {
           </div>
         </div>
 
+        {showWinner && (
+          <div className="text-[11px] text-text-dim mb-2.5 font-hindi">
+            👆 Chahe to niche list mein se koi aur helper bhi chun sakte ho
+          </div>
+        )}
+
         <div>
-          {candidates.map((h, i) => {
-            const isWinner = showWinner && i === 0;
-            const isRejected = showWinner && i !== 0;
+          {candidates.map((h) => {
+            const isChosen = showWinner && chosenData && h.id === chosenData.id;
+            const isDimmed = showWinner && chosenData && h.id !== chosenData.id;
             return (
               <div
-                key={h.name}
+                key={h.id || h.name}
+                onClick={() => handleSelectCandidate(h)}
                 className={`bg-card border rounded-2xl px-4 py-3.5 mb-2.5 opacity-0 translate-y-2 animate-candIn transition-opacity ${
-                  isWinner ? "border-safe shadow-[0_0_0_1px_#2ECC71]" : "border-line"
-                } ${isRejected ? "opacity-45" : ""}`}
-                style={{ animationDelay: `${i * 0.15}s` }}
+                  isChosen ? "border-safe shadow-[0_0_0_1px_#2ECC71]" : "border-line"
+                } ${isDimmed ? "opacity-45" : ""} ${showWinner ? "cursor-pointer" : ""}`}
+                style={{ animationDelay: `${candidates.indexOf(h) * 0.15}s` }}
               >
                 <div className="flex items-center gap-2.5">
                   <div className="w-[38px] h-[38px] rounded-full bg-card-2 flex items-center justify-center text-sm font-bold flex-shrink-0">
@@ -176,24 +206,24 @@ export default function AIMatchingScreen() {
           })}
         </div>
 
-        {showWinner && winnerData && (
+        {showWinner && chosenData && (
           <div className="bg-card border border-safe rounded-2xl p-4 mt-1.5 opacity-0 animate-candIn">
             <div className="flex items-center justify-between">
               <div className="text-[11px] font-extrabold text-safe bg-[rgba(46,204,113,0.12)] px-2.5 py-1 rounded-full tracking-wide">
-                ✅ AI CHOICE
+                {selectedId ? "✅ AAPKA CHOICE" : "✅ AI CHOICE"}
               </div>
               <div className="font-display font-bold text-accent-2 text-[15px]">
-                Match {winnerData.matchPercent}%
+                Match {chosenData.matchPercent}%
               </div>
             </div>
             <div className="flex items-center gap-3 mt-2.5">
               <div className="w-[52px] h-[52px] rounded-full flex items-center justify-center text-xl font-bold bg-gradient-to-br from-[#576274] to-[#2c333f]">
-                {winnerData.init}
+                {chosenData.init}
               </div>
               <div>
-                <div className="text-[15.5px] font-bold">{winnerData.name}</div>
+                <div className="text-[15.5px] font-bold">{chosenData.name}</div>
                 <div className="text-[11.5px] text-text-dim mt-0.5">
-                  {winnerData.vehicle} · ETA {winnerData.etaMin} min
+                  {chosenData.vehicle} · ETA {chosenData.etaMin} min
                 </div>
               </div>
             </div>
@@ -214,7 +244,7 @@ export default function AIMatchingScreen() {
                 </div>
               ))}
               <div className="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-safe bg-[rgba(46,204,113,0.12)] px-2.5 py-1 rounded-full mt-1.5">
-                🤖 AI Confidence: {winnerData.matchPercent}%
+                🤖 AI Confidence: {chosenData.matchPercent}%
               </div>
             </div>
           </div>

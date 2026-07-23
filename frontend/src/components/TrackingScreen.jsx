@@ -33,6 +33,7 @@ export default function TrackingScreen() {
     Math.max(0, Math.round(w.etaMin - (w.etaMin / totalSteps) * i))
   );
 
+  // Sirf step ko aage badhata hai, koi doosri state ya context update nahi karta
   useEffect(() => {
     setStep(0);
     setArrived(false);
@@ -43,10 +44,7 @@ export default function TrackingScreen() {
         const next = prev + 1;
         if (next >= PATH.length) {
           clearInterval(intervalRef.current);
-          setArrived(true);
-          showToast(`🟢 ${w.name} pahunch gaya hai — OTP share karein`);
-          setTimeout(() => goTo("done"), 1800);
-          return prev;
+          return prev; // max step par ruk jao, arrival alag effect mein handle hoga
         }
         return next;
       });
@@ -55,6 +53,18 @@ export default function TrackingScreen() {
     return () => clearInterval(intervalRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [w.name]);
+
+  // Jab step apne max tak pahunch jaaye, tabhi arrival wale side-effects chalao
+  // (setArrived, showToast, goTo) — ye ab render ke dauraan nahi, effect ke andar hote hain
+  useEffect(() => {
+    if (step >= totalSteps && !arrived) {
+      setArrived(true);
+      showToast(`🟢 ${w.name} pahunch gaya hai — OTP share karein`);
+      const doneTimer = setTimeout(() => goTo("done"), 1800);
+      return () => clearTimeout(doneTimer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   const [cx, cy] = PATH[step];
   const etaText = arrived ? 0 : etaSeries[step];

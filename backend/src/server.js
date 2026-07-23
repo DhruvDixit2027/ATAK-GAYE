@@ -4,6 +4,8 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const matchRoutes = require('./routes/matchRoutes');
 const requestRoutes = require('./routes/requestRoutes');
+const userRoutes = require('./routes/userRoutes');
+const helperRoutes = require('./routes/helperRoutes');
 
 const app = express();
 
@@ -22,6 +24,8 @@ app.get('/', (req, res) => {
 // Mount our routes under /api
 app.use('/api', matchRoutes);
 app.use('/api/requests', requestRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/helpers', helperRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
