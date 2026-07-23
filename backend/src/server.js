@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const matchRoutes = require('./routes/matchRoutes');
+const requestRoutes = require('./routes/requestRoutes');
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.get('/', (req, res) => {
 
 // Mount our routes under /api
 app.use('/api', matchRoutes);
+app.use('/api/requests', requestRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
