@@ -27,16 +27,16 @@ function skillMatchScore(helperSkills, requiredSkill) {
 
 // Main function: takes user's location + what they need, returns ranked helpers
 async function findBestMatches(userLat, userLng, requiredSkill) {
-  const helpers = await Helper.find({ isAvailable: true, skills: { $in: [requiredSkill] } });
+  const helpers = await Helper.find({ availability: true, skillTypes: { $in: [requiredSkill] } });
 
   const scored = helpers.map(helper => {
-    const distanceKm = getDistanceKm(userLat, userLng, helper.location.lat, helper.location.lng);
+    const distanceKm = getDistanceKm(userLat, userLng, helper.currentLocation.lat, helper.currentLocation.lng);
 
     const dScore = distanceScore(distanceKm);
     const rScore = (helper.rating / 5) * 100;
-    const sScore = skillMatchScore(helper.skills, requiredSkill);
+    const sScore = skillMatchScore(helper.skillTypes, requiredSkill);
     const successScore = helper.successRate;
-    const availScore = helper.isAvailable ? 95 : 0;
+    const availScore = helper.availability ? 95 : 0;
 
     // Weighted final score — adjust these weights anytime to tune matching
     const finalScore =
@@ -49,14 +49,17 @@ async function findBestMatches(userLat, userLng, requiredSkill) {
     return {
       id: helper._id,
       name: helper.name,
-      vehicle: helper.vehicle,
-      plateNumber: helper.plateNumber,
+      vehicle: helper.vehicleType,
+      plateNumber: helper.vehicleNumber,
       distanceKm: Number(distanceKm.toFixed(1)),
       rating: helper.rating,
       successRate: helper.successRate,
-      skillMatch: sScore,
-      availability: availScore,
-      matchPercent: Math.round(finalScore)
+      matchPercent: Math.round(finalScore),
+      distScore: dScore / 100,
+      ratingScore: rScore / 100,
+      skillScore: sScore / 100,
+      availScore: availScore / 100,
+      successScore: successScore / 100
     };
   });
 

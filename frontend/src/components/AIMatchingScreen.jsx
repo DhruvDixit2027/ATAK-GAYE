@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useApp } from "../context/AppContext";
-import { getRankedCandidates } from "../data/helperPool";
 
 export default function AIMatchingScreen() {
   const { goTo, selectedIssue, setWinner } = useApp();
@@ -10,18 +9,52 @@ export default function AIMatchingScreen() {
   const [statusText, setStatusText] = useState("Nearby helpers scan ho rahe hain...");
 
   useEffect(() => {
-    const ranked = getRankedCandidates(selectedIssue || "mechanic");
-    setCandidates(ranked);
-    setRevealedScores(false);
-    setShowWinner(false);
-    setStatusText("Nearby helpers scan ho rahe hain...");
+    let scoreTimer;
+    let winnerTimer;
 
-    const scoreTimer = setTimeout(() => setRevealedScores(true), ranked.length * 150 + 200);
-    const winnerTimer = setTimeout(() => {
-      setStatusText("Best helper mil gaya!");
-      setShowWinner(true);
-      setWinner(ranked[0]);
-    }, ranked.length * 150 + 1400);
+    async function fetchMatches() {
+      try {
+        const res = await fetch("http://localhost:5000/api/match", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lat: 26.4499,      // abhi ke liye hardcoded test location
+            lng: 80.3319,
+            serviceType: selectedIssue || "mechanic"
+          })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          setStatusText(data.message || "Koi helper nahi mila");
+          return;
+        }
+
+        // Backend fields ko frontend format mein map karo
+        const ranked = data.allMatches.map(h => ({
+          ...h,
+          init: h.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
+          etaMin: Math.round(h.distanceKm * 2.5) // rough estimate, backend abhi ETA nahi deta
+        }));
+
+        setCandidates(ranked);
+        setRevealedScores(false);
+        setShowWinner(false);
+        setStatusText("Nearby helpers scan ho rahe hain...");
+
+        scoreTimer = setTimeout(() => setRevealedScores(true), ranked.length * 150 + 200);
+        winnerTimer = setTimeout(() => {
+          setStatusText("Best helper mil gaya!");
+          setShowWinner(true);
+          setWinner(ranked[0]);
+        }, ranked.length * 150 + 1400);
+      } catch (err) {
+        console.error("Match fetch failed:", err);
+        setStatusText("Backend se connect nahi ho paya");
+      }
+    }
+
+    fetchMatches();
 
     return () => {
       clearTimeout(scoreTimer);
