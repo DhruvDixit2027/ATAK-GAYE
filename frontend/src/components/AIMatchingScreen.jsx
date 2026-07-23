@@ -65,6 +65,29 @@ export default function AIMatchingScreen() {
 
   const winnerData = candidates[0];
 
+  // 👇 NAYA FUNCTION — backend mein request create karta hai
+  const handleConfirmRequest = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/requests/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          helperId: winnerData._id,
+          issueType: selectedIssue || "mechanic",
+          userLocation: { lat: 26.4499, lng: 80.3319 },
+          matchScore: winnerData.matchPercent,
+          estimatedArrivalMin: winnerData.etaMin,
+        }),
+      });
+      const data = await res.json();
+      console.log("Request created:", data);
+      goTo("tracking");
+    } catch (err) {
+      console.error("Request create karne mein error:", err);
+      goTo("tracking"); // fallback, taaki UI atke nahi
+    }
+  };
+
   const reasons = winnerData
     ? [
         { label: "Distance", pct: Math.round(winnerData.distScore * 100), sub: `${winnerData.distanceKm} km door` },
@@ -201,7 +224,7 @@ export default function AIMatchingScreen() {
       {showWinner && (
         <div className="px-5 pt-4 pb-[26px] bg-gradient-to-t from-bg via-bg/60 to-transparent">
           <button
-            onClick={() => goTo("tracking")}
+            onClick={handleConfirmRequest}
             className="w-full py-[15px] rounded-2xl border-none font-display font-bold text-[15px] tracking-wide text-[#171009] cursor-pointer"
             style={{ background: "linear-gradient(135deg, #FF6A3D, #ff8a5c)" }}
           >

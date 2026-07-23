@@ -39,5 +39,25 @@ router.post('/:requestId/reject', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// Create a new request (jab user AI matching ke baad "confirm" dabata hai)
+router.post('/create', async (req, res) => {
+  try {
+    const { helperId, issueType, userLocation, matchScore, matchBreakdown, estimatedArrivalMin } = req.body;
 
+    const newRequest = new Request({
+      helperId,
+      issueType,
+      userLocation,
+      status: 'pending',
+      matchScore,
+      matchBreakdown,
+      estimatedArrivalMin,
+    });
+
+    await newRequest.save();
+    res.status(201).json(newRequest);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 module.exports = router;
