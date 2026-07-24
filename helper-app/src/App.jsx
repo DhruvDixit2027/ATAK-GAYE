@@ -1,18 +1,53 @@
 import React, { useState } from 'react';
-import RequestList from './components/RequestList';
+import HelperHome from './components/HelperHome';
 import HelperDetailsScreen from './components/HelperDetailsScreen';
+import TrackingScreen from './components/TrackingScreen';
+import './App.css';
 import './index.css';
 
 export default function App() {
-  // Pehle localStorage check karo — agar helper pehle se registered hai to seedha use karo
   const [helper, setHelper] = useState(() => {
-    const saved = localStorage.getItem("atakGayeHelper");
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem("atakGayeHelper");
+      return saved ? JSON.parse(saved) : null;
+    } catch (err) {
+      console.error("Corrupt helper data, clearing:", err);
+      localStorage.removeItem("atakGayeHelper");
+      return null;
+    }
   });
 
-  // Agar helper registered nahi hai, to sabse pehle details form dikhao
+  const [activeJob, setActiveJob] = useState(null); // ← YE LINE MISSING THI
+
+  const handleRegistered = (helperData) => {
+    localStorage.setItem("atakGayeHelper", JSON.stringify(helperData));
+    setHelper(helperData);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("atakGayeHelper");
+    setHelper(null);
+  };
+
   if (!helper) {
-    return <HelperDetailsScreen onRegistered={setHelper} />;
+    return <HelperDetailsScreen onRegistered={handleRegistered} />;
+  }
+
+  if (activeJob) {
+    return (
+      <div className="app-shell">
+        <header className="app-header">
+          <div className="logo-mark">A</div>
+          <div>
+            <h1>Atak Gaye — Helper</h1>
+            <p className="header-sub">On a job</p>
+          </div>
+        </header>
+        <main className="app-main">
+          <TrackingScreen job={activeJob} onComplete={() => setActiveJob(null)} />
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -21,12 +56,12 @@ export default function App() {
         <div className="logo-mark">A</div>
         <div>
           <h1>Atak Gaye — Helper</h1>
-          <p className="header-sub">Naye requests yahan dikhenge</p>
+          <p className="header-sub">Welcome, {helper.name}</p>
         </div>
       </header>
 
       <main className="app-main">
-        <RequestList helperId={helper._id} />
+        <HelperHome helper={helper} onLogout={handleLogout} onJobAccepted={setActiveJob} />
       </main>
     </div>
   );

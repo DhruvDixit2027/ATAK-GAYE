@@ -32,7 +32,7 @@ export default function HelperDetailsScreen({ onRegistered }) {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/helpers/create", {
+      const res = await fetch("http://10.177.130.146:5000/api/helpers/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
