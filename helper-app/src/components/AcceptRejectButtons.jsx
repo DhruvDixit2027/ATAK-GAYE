@@ -1,13 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function AcceptRejectButtons({ requestId, onAccept, onReject }) {
+  const [loading, setLoading] = useState(false);
+  const [actionTaken, setActionTaken] = useState(null);
+
+  const handleAction = async (action) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`http://10.177.130.146:5000/api/requests/${requestId}/${action}`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("Request failed");
+      setActionTaken(action);
+      setTimeout(() => {
+        if (action === "accept") onAccept();
+        else onReject();
+      }, 500);
+    } catch (err) {
+      alert(`${action === "accept" ? "Accept" : "Reject"} karne mein error aaya`);
+      console.error(err);
+      setLoading(false);
+    }
+  };
+
+  if (actionTaken === "accept") {
+    return <div className="action-confirmed accepted">✅ Accepted — navigate ho rahe hain...</div>;
+  }
+  if (actionTaken === "reject") {
+    return <div className="action-confirmed rejected">❌ Request reject ho gayi</div>;
+  }
+
   return (
-    <div className="accept-reject-buttons">
-      <button className="btn-reject" onClick={() => onReject(requestId)}>
-        Reject
-      </button>
-      <button className="btn-accept" onClick={() => onAccept(requestId)}>
-        Accept
+    <div className="action-buttons">
+      <button className="reject-btn" disabled={loading} onClick={() => handleAction("reject")}>Reject</button>
+      <button className="accept-btn" disabled={loading} onClick={() => handleAction("accept")}>
+        {loading ? "..." : "Accept"}
       </button>
     </div>
   );
