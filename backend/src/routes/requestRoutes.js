@@ -84,5 +84,16 @@ router.get('/:requestId', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// GET /api/requests/user/:userId — us user ki saari requests (history ke liye)
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const requests = await Request.find({ userId: req.params.userId })
+      .populate('helperId', 'name vehicleType vehicleNumber rating')
+      .sort({ createdAt: -1 });
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;

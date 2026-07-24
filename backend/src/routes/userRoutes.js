@@ -24,5 +24,24 @@ router.post('/create', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// PATCH /api/users/:userId — profile edit karne ke liye
+router.patch('/:userId', async (req, res) => {
+  try {
+    const { name, phone, vehicleType, currentLocation } = req.body;
 
+    const updated = await User.findByIdAndUpdate(
+      req.params.userId,
+      { name, phone, vehicleType, currentLocation },
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ error: 'User nahi mila' });
+    }
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 module.exports = router;
