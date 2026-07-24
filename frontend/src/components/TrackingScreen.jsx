@@ -19,28 +19,55 @@ const DEFAULT_WINNER = {
   rating: 4.8,
 };
 
+// Haversine — do lat/lng points ke beech real distance (km)
+function getDistanceKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// PATH ke do points ke beech linear interpolation, progress (0 to 1) ke hisaab se
+function getPointOnPath(progress) {
+  const clamped = Math.max(0, Math.min(1, progress));
+  const totalSegments = PATH.length - 1;
+  const segFloat = clamped * totalSegments;
+  const segIndex = Math.min(Math.floor(segFloat), totalSegments - 1);
+  const segProgress = segFloat - segIndex;
+
+  const [x1, y1] = PATH[segIndex];
+  const [x2, y2] = PATH[segIndex + 1];
+
+  return [
+    x1 + (x2 - x1) * segProgress,
+    y1 + (y2 - y1) * segProgress,
+  ];
+}
+
 export default function TrackingScreen() {
-  const { goTo, winner, showToast, currentRequestId } = useApp();
+  const { goTo, winner, showToast, currentRequestId, user } = useApp();
   const w = winner || DEFAULT_WINNER;
   const firstName = w.name.split(" ")[0];
 
-  const [step, setStep] = useState(0);
   const [arrived, setArrived] = useState(false);
-  const intervalRef = useRef(null);
 
-  // 👇 NAYA: real backend status — jab tak helper accept na kare, animation shuru nahi hogi
-  const [requestStatus, setRequestStatus] = useState("pending"); // "pending" | "accepted" | "rejected"
+  const [requestStatus, setRequestStatus] = useState("pending");
   const pollRef = useRef(null);
 
-  const totalSteps = PATH.length - 1;
-  const etaSeries = Array.from({ length: PATH.length }, (_, i) =>
-    Math.max(0, Math.round(w.etaMin - (w.etaMin / totalSteps) * i))
-  );
+  // 👇 NAYA: real distance-based progress tracking
+  const [progress, setProgress] = useState(0);
+  const [liveDistanceKm, setLiveDistanceKm] = useState(w.distanceKm ?? null);
+  const initialDistanceRef = useRef(w.distanceKm ?? null);
+  const locationPollRef = useRef(null);
 
-  // 👇 NAYA: Backend se har 3 second mein status poll karo
+  // Status polling — helper ne accept/reject kiya ya nahi
   useEffect(() => {
     if (!currentRequestId) {
-      // Agar ID hi nahi hai (fallback case), purana behavior rakho — turant accepted maan lo
       setRequestStatus("accepted");
       return;
     }
@@ -57,56 +84,71 @@ export default function TrackingScreen() {
           setRequestStatus("rejected");
           clearInterval(pollRef.current);
         }
-        // agar "pending" hai to kuch nahi karna, polling continue rahegi
       } catch (err) {
         console.error("Status check karne mein error:", err);
       }
     };
 
-    checkStatus(); // turant ek baar check karo
-    pollRef.current = setInterval(checkStatus, 3000); // fir har 3 second
+    checkStatus();
+    pollRef.current = setInterval(checkStatus, 3000);
 
     return () => clearInterval(pollRef.current);
   }, [currentRequestId]);
 
-  // Sirf step ko aage badhata hai — lekin sirf tab jab helper ne accept kar liya ho
+  // 👇 NAYA: Helper ki real location poll karo, jab tak accept ho chuka ho aur user location available ho
   useEffect(() => {
-    if (requestStatus !== "accepted") return; // 👈 NAYA: jab tak accept nahi, animation shuru mat karo
+    if (requestStatus !== "accepted" || !w.id || !user?.currentLocation) return;
 
-    setStep(0);
-    setArrived(false);
-    clearInterval(intervalRef.current);
+    const pollLocation = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/helpers/${w.id}`);
+        const helper = await res.json();
 
-    intervalRef.current = setInterval(() => {
-      setStep((prev) => {
-        const next = prev + 1;
-        if (next >= PATH.length) {
-          clearInterval(intervalRef.current);
-          return prev; // max step par ruk jao, arrival alag effect mein handle hoga
+        if (!helper?.currentLocation) return;
+
+        const dist = getDistanceKm(
+          user.currentLocation.lat,
+          user.currentLocation.lng,
+          helper.currentLocation.lat,
+          helper.currentLocation.lng
+        );
+
+        setLiveDistanceKm(Number(dist.toFixed(1)));
+
+        // Agar initial distance record nahi hui thi, ab set kar do
+        if (initialDistanceRef.current == null || initialDistanceRef.current === 0) {
+          initialDistanceRef.current = dist || 0.1;
         }
-        return next;
-      });
-    }, 900);
 
-    return () => clearInterval(intervalRef.current);
+        // Progress = kitna percent raasta cover ho chuka hai (0 = start, 1 = pahunch gaya)
+        const rawProgress = 1 - dist / initialDistanceRef.current;
+        setProgress(Math.max(0, Math.min(1, rawProgress)));
+
+        // ~50 meter ke andar aa jaaye to "arrived" maan lo
+        if (dist <= 0.05 && !arrived) {
+          setArrived(true);
+          showToast(`🟢 ${w.name} pahunch gaya hai — OTP share karein`);
+          setTimeout(() => goTo("done"), 1800);
+        }
+      } catch (err) {
+        console.error("Helper location fetch failed:", err);
+      }
+    };
+
+    pollLocation();
+    locationPollRef.current = setInterval(pollLocation, 4000);
+
+    return () => clearInterval(locationPollRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [w.name, requestStatus]);
+  }, [requestStatus, w.id]);
 
-  // Jab step apne max tak pahunch jaaye, tabhi arrival wale side-effects chalao
-  useEffect(() => {
-    if (step >= totalSteps && !arrived) {
-      setArrived(true);
-      showToast(`🟢 ${w.name} pahunch gaya hai — OTP share karein`);
-      const doneTimer = setTimeout(() => goTo("done"), 1800);
-      return () => clearTimeout(doneTimer);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
+  const [cx, cy] = getPointOnPath(progress);
+  const etaText = arrived
+    ? 0
+    : liveDistanceKm != null
+    ? Math.max(1, Math.round(liveDistanceKm * 2.5))
+    : w.etaMin;
 
-  const [cx, cy] = PATH[step];
-  const etaText = arrived ? 0 : etaSeries[step];
-
-  // 👇 NAYA: Jab tak helper ne response nahi diya, "wait" screen dikhao
   if (requestStatus === "pending") {
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center animate-fadeIn">
@@ -119,7 +161,6 @@ export default function TrackingScreen() {
     );
   }
 
-  // 👇 NAYA: Agar helper ne reject kar diya
   if (requestStatus === "rejected") {
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center animate-fadeIn">
@@ -139,12 +180,14 @@ export default function TrackingScreen() {
     );
   }
 
-  // Neeche wala sab kuch sirf tab dikhega jab requestStatus === "accepted"
   return (
     <div className="absolute inset-0 flex flex-col animate-fadeIn">
       <div className="relative h-[260px] rounded-b-[28px] overflow-hidden track-map-bg">
         <div className="absolute top-4 left-5 bg-[#0B0D10d9] border border-line px-3.5 py-2 rounded-2xl text-xs">
           Pahunchne mein <b className="text-accent-2 text-sm">{arrived ? "aa gaya!" : `${etaText} min`}</b>
+          {liveDistanceKm != null && !arrived && (
+            <span className="text-text-dim"> · {liveDistanceKm} km</span>
+          )}
         </div>
         <svg viewBox="0 0 400 260" className="w-full h-full">
           <path
@@ -154,7 +197,7 @@ export default function TrackingScreen() {
             fill="none"
           />
           <circle cx="40" cy="230" r="7" fill="#2ECC71" />
-          <circle cx={cx} cy={cy} r="9" fill="#FF6A3D">
+          <circle cx={cx} cy={cy} r="9" fill="#FF6A3D" style={{ transition: "cx 3.5s linear, cy 3.5s linear" }}>
             <animate attributeName="r" values="9;12;9" dur="1.4s" repeatCount="indefinite" />
           </circle>
           <circle cx="360" cy="30" r="7" fill="#FFC145" />
@@ -181,6 +224,11 @@ export default function TrackingScreen() {
             <div className="text-[11.5px] text-text-dim mt-0.5 font-hindi">
               ⭐ {w.rating} · {w.vehicle}
             </div>
+            {liveDistanceKm != null && (
+              <div className="text-[11.5px] text-accent-2 mt-1 font-semibold font-hindi">
+                📍 {liveDistanceKm} km door
+              </div>
+            )}
           </div>
         </div>
         <div className="flex gap-2.5 mt-4">

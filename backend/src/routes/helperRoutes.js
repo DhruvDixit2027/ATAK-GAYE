@@ -45,5 +45,38 @@ router.post('/:helperId/availability', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// PATCH /api/helpers/:helperId/location — helper apni live location update karega
+router.patch('/:helperId/location', async (req, res) => {
+  try {
+    const { lat, lng } = req.body;
 
+    if (lat == null || lng == null) {
+      return res.status(400).json({ error: 'lat aur lng dono zaroori hain' });
+    }
+
+    const updated = await Helper.findByIdAndUpdate(
+      req.params.helperId,
+      { currentLocation: { lat, lng } },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Helper nahi mila' });
+    }
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// GET /api/helpers/:helperId — ek helper ki current details/location fetch karne ke liye
+router.get('/:helperId', async (req, res) => {
+  try {
+    const helper = await Helper.findById(req.params.helperId);
+    if (!helper) return res.status(404).json({ error: 'Helper nahi mila' });
+    res.json(helper);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 module.exports = router;

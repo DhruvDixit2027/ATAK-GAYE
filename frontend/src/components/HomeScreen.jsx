@@ -1,10 +1,31 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useApp } from "../context/AppContext";
 import { ISSUES } from "../data/helperPool";
+import { getCurrentLocation, getAddressFromCoords } from "../utils";
 import BottomNav from "./BottomNav";
 
 export default function HomeScreen() {
   const { goTo, setSelectedIssue, showToast } = useApp();
+
+  // 👇 NAYA: current location ka short address yahan store hoga
+  const [locationLabel, setLocationLabel] = useState("Location le rahe hain...");
+
+  useEffect(() => {
+    async function fetchLocation() {
+      try {
+        const loc = await getCurrentLocation();
+        const address = await getAddressFromCoords(loc.lat, loc.lng);
+        // Poora address bahut lamba hota hai, top bar ke liye chhota rakho —
+        // pehle 2 comma-separated parts hi lo (jaise "NH-27, Lucknow")
+        const shortAddress = address.split(",").slice(0, 2).join(",").trim();
+        setLocationLabel(shortAddress || "Location mil gayi");
+      } catch (err) {
+        console.error("Location fetch failed:", err);
+        setLocationLabel("Location available nahi");
+      }
+    }
+    fetchLocation();
+  }, []);
 
   const openIssue = (id) => {
     setSelectedIssue(id);
@@ -23,7 +44,7 @@ export default function HomeScreen() {
         </div>
         <div className="text-xs text-text-dim flex items-center gap-1.5">
           <span className="w-[7px] h-[7px] rounded-full bg-safe shadow-[0_0_0_3px_rgba(46,204,113,0.2)]" />
-          NH-27, Lucknow bypass
+          {locationLabel}
         </div>
       </div>
 
@@ -34,22 +55,24 @@ export default function HomeScreen() {
             Kahin phas gaye? Hum hain na.
           </h2>
         </div>
-
         {/* Map card */}
-        <div className="h-[150px] rounded-card map-glow border border-line relative overflow-hidden mb-5">
-          <svg viewBox="0 0 400 150" className="absolute inset-0 w-full h-full">
-            <path
-              d="M0,110 C80,90 140,130 220,95 C300,60 340,80 400,60"
-              stroke="#3a4250"
-              strokeWidth="4"
-              fill="none"
-            />
-            <circle cx="220" cy="95" r="6" fill="#FF6A3D" />
-          </svg>
-          <div className="absolute bottom-3.5 left-4 bg-[#0B0D10bf] px-2.5 py-1.5 rounded-lg text-[11px] text-text-dim border border-line font-hindi">
-            📍 Live location shared for faster help
-          </div>
-        </div>
+<div className="h-[150px] rounded-card map-glow border border-line relative overflow-hidden mb-5">
+  <svg viewBox="0 0 400 150" className="absolute inset-0 w-full h-full">
+    <path
+      d="M0,110 C80,90 140,130 220,95 C300,60 340,80 400,60"
+      stroke="#3a4250"
+      strokeWidth="4"
+      fill="none"
+    />
+    {/* Pulsing rings — Google Maps jaisa live location effect */}
+    <circle cx="220" cy="95" r="6" fill="#FF6A3D" />
+    <circle cx="220" cy="95" r="6" fill="#FF6A3D" className="animate-locationPulse" />
+    <circle cx="220" cy="95" r="6" fill="#FF6A3D" className="animate-locationPulse" style={{ animationDelay: "0.7s" }} />
+  </svg>
+  <div className="absolute bottom-3.5 left-4 bg-[#0B0D10bf] px-2.5 py-1.5 rounded-lg text-[11px] text-text-dim border border-line font-hindi">
+    📍 Live location shared for faster help
+  </div>
+</div>
 
         {/* SOS */}
         <div className="flex flex-col items-center mb-6 mt-2">

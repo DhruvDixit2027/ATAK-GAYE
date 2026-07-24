@@ -34,3 +34,18 @@ body {
 .track-map-bg {
   background: linear-gradient(160deg, #1a2029, #10141a);
 }
+@keyframes locationPulse {
+  0% {
+    r: 6;
+    opacity: 0.7;
+  }
+  100% {
+    r: 22;
+    opacity: 0;
+  }
+}
+
+.animate-locationPulse {
+  animation: locationPulse 1.8s ease-out infinite;
+  transform-origin: center;
+}

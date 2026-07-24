@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useApp } from "../context/AppContext";
-import { getCurrentLocation } from "../utils";
+import { getCurrentLocation, getAddressFromCoords } from "../utils";
 
 export default function AIMatchingScreen() {
-  const { goTo, selectedIssue, setWinner, user, setCurrentRequestId } = useApp();
+  const { goTo, selectedIssue, setWinner, user, setUser, setCurrentRequestId } = useApp();
   const [candidates, setCandidates] = useState([]);
   const [revealedScores, setRevealedScores] = useState(false);
   const [showWinner, setShowWinner] = useState(false);
   const [statusText, setStatusText] = useState("Aapki location le rahe hain...");
 
-  // 👇 NAYA: real GPS location yahan store hogi
   const [userLocation, setUserLocation] = useState(null);
+  const [userAddress, setUserAddress] = useState(null);
 
-  // 👇 Naya: user manually kisko select karta hai, wo yahan track hota hai.
-  // null hone ka matlab hai "AI ke default winner (candidates[0]) ko hi use karo"
   const [selectedId, setSelectedId] = useState(null);
 
   useEffect(() => {
@@ -22,12 +20,19 @@ export default function AIMatchingScreen() {
 
     async function fetchMatches() {
       try {
-        // 👇 NAYA: hardcoded location ki jagah real GPS location lo
         setStatusText("Aapki location le rahe hain...");
         let location;
         try {
           location = await getCurrentLocation();
           setUserLocation(location);
+
+          // 👇 NAYA: user object mein bhi current location save karo,
+          // taaki TrackingScreen live distance calculate kar sake
+          if (user) {
+            setUser({ ...user, currentLocation: location });
+          }
+
+          getAddressFromCoords(location.lat, location.lng).then(setUserAddress);
         } catch (locErr) {
           console.error("Location nahi mil payi:", locErr);
           setStatusText("Location access nahi mili — settings check karo");
@@ -52,17 +57,16 @@ export default function AIMatchingScreen() {
           return;
         }
 
-        // Backend fields ko frontend format mein map karo
         const ranked = data.allMatches.map(h => ({
           ...h,
           init: h.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
-          etaMin: Math.round(h.distanceKm * 2.5) // rough estimate, backend abhi ETA nahi deta
+          etaMin: Math.round(h.distanceKm * 2.5)
         }));
 
         setCandidates(ranked);
         setRevealedScores(false);
         setShowWinner(false);
-        setSelectedId(null); // naya match cycle shuru hote hi selection reset karo
+        setSelectedId(null);
         setStatusText("Nearby helpers scan ho rahe hain...");
 
         scoreTimer = setTimeout(() => setRevealedScores(true), ranked.length * 150 + 200);
@@ -86,23 +90,20 @@ export default function AIMatchingScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIssue]);
 
-  // Jo bhi currently "chosen" hai — ya to user ne manually select kiya, ya AI ka default winner
   const chosenData = selectedId
     ? candidates.find((c) => c.id === selectedId)
     : candidates[0];
 
-  // User kisi bhi card pe click karke apni pasand badal sake
   const handleSelectCandidate = (helper) => {
-    if (!showWinner) return; // scores reveal hone se pehle select karna allow mat karo
+    if (!showWinner) return;
     setSelectedId(helper.id);
-    setWinner(helper); // context mein bhi update ho jaaye, taaki tracking screen isi ko use kare
+    setWinner(helper);
   };
 
-  // Backend mein request create karta hai — jo bhi currently chosen hai, usी ke liye
   const handleConfirmRequest = async () => {
     if (!user || !user._id) {
       console.error("User details missing, request create nahi ho sakti");
-      goTo("tracking"); // fallback, taaki UI atke nahi
+      goTo("tracking");
       return;
     }
     if (!chosenData) return;
@@ -115,7 +116,6 @@ export default function AIMatchingScreen() {
           userId: user._id,
           helperId: chosenData.id,
           issueType: selectedIssue || "mechanic",
-          // 👇 NAYA: real location use ho rahi hai, hardcoded nahi
           userLocation: userLocation || { lat: 26.4499, lng: 80.3319 },
           matchScore: chosenData.matchPercent,
           estimatedArrivalMin: chosenData.etaMin,
@@ -123,11 +123,11 @@ export default function AIMatchingScreen() {
       });
       const data = await res.json();
       console.log("Request created:", data);
-      setCurrentRequestId(data._id);   // 👈 is ID se tracking screen status poll karegi
+      setCurrentRequestId(data._id);
       goTo("tracking");
     } catch (err) {
       console.error("Request create karne mein error:", err);
-      goTo("tracking"); // fallback, taaki UI atke nahi
+      goTo("tracking");
     }
   };
 
@@ -161,6 +161,11 @@ export default function AIMatchingScreen() {
             <div className="text-[11px] text-text-dim mt-0.5 font-hindi">
               Atak Gaye AI Engine · distance, rating, skill, availability check kar raha hai
             </div>
+            {userAddress && (
+              <div className="text-[10.5px] text-accent-2 mt-1 font-hindi">
+                📍 {userAddress}
+              </div>
+            )}
           </div>
         </div>
 

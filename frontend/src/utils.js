@@ -24,3 +24,16 @@ export function getCurrentLocation() {
     );
   });
 }
+
+// Coordinates se readable address nikalta hai (reverse geocoding)
+export async function getAddressFromCoords(lat, lng) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+    );
+    const data = await res.json();
+    return data.display_name || "Location mil gayi";
+  } catch {
+    return "Address nahi mil paya";
+  }
+}
