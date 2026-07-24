@@ -74,5 +74,15 @@ router.post('/create', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// Ek specific request ka current status check karne ke liye (tracking screen isko poll karegi)
+router.get('/:requestId', async (req, res) => {
+  try {
+    const request = await Request.findById(req.params.requestId);
+    if (!request) return res.status(404).json({ error: 'Request not found' });
+    res.json(request);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;

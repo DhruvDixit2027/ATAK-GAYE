@@ -6,10 +6,10 @@ export function AppProvider({ children }) {
   const [screen, setScreen] = useState("home");
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [winner, setWinner] = useState(null);
+  const [currentRequestId, setCurrentRequestId] = useState(null);   // 👈 NAYA
   const [toast, setToast] = useState({ show: false, msg: "" });
   const toastTimer = useRef(null);
 
-  // 👇 naya: user ki details, browser storage se load karo (agar pehle se bhari hain)
   const [user, setUserState] = useState(() => {
     const saved = localStorage.getItem("atakGayeUser");
     return saved ? JSON.parse(saved) : null;
@@ -23,7 +23,6 @@ export function AppProvider({ children }) {
     toastTimer.current = setTimeout(() => setToast({ show: false, msg: "" }), 2200);
   }, []);
 
-  // 👇 naya: user set karte waqt localStorage mein bhi save kar do
   const setUser = useCallback((userData) => {
     setUserState(userData);
     localStorage.setItem("atakGayeUser", JSON.stringify(userData));
@@ -36,10 +35,12 @@ export function AppProvider({ children }) {
     setSelectedIssue,
     winner,
     setWinner,
+    currentRequestId,      // 👈 NAYA
+    setCurrentRequestId,   // 👈 NAYA
     toast,
     showToast,
-    user,        // 👈 naya
-    setUser,     // 👈 naya
+    user,
+    setUser,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

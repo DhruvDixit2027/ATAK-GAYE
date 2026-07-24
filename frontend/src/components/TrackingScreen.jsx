@@ -20,7 +20,7 @@ const DEFAULT_WINNER = {
 };
 
 export default function TrackingScreen() {
-  const { goTo, winner, showToast } = useApp();
+  const { goTo, winner, showToast, currentRequestId } = useApp();
   const w = winner || DEFAULT_WINNER;
   const firstName = w.name.split(" ")[0];
 
@@ -28,13 +28,51 @@ export default function TrackingScreen() {
   const [arrived, setArrived] = useState(false);
   const intervalRef = useRef(null);
 
+  // 👇 NAYA: real backend status — jab tak helper accept na kare, animation shuru nahi hogi
+  const [requestStatus, setRequestStatus] = useState("pending"); // "pending" | "accepted" | "rejected"
+  const pollRef = useRef(null);
+
   const totalSteps = PATH.length - 1;
   const etaSeries = Array.from({ length: PATH.length }, (_, i) =>
     Math.max(0, Math.round(w.etaMin - (w.etaMin / totalSteps) * i))
   );
 
-  // Sirf step ko aage badhata hai, koi doosri state ya context update nahi karta
+  // 👇 NAYA: Backend se har 3 second mein status poll karo
   useEffect(() => {
+    if (!currentRequestId) {
+      // Agar ID hi nahi hai (fallback case), purana behavior rakho — turant accepted maan lo
+      setRequestStatus("accepted");
+      return;
+    }
+
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/requests/${currentRequestId}`);
+        const data = await res.json();
+
+        if (data.status === "accepted") {
+          setRequestStatus("accepted");
+          clearInterval(pollRef.current);
+        } else if (data.status === "rejected") {
+          setRequestStatus("rejected");
+          clearInterval(pollRef.current);
+        }
+        // agar "pending" hai to kuch nahi karna, polling continue rahegi
+      } catch (err) {
+        console.error("Status check karne mein error:", err);
+      }
+    };
+
+    checkStatus(); // turant ek baar check karo
+    pollRef.current = setInterval(checkStatus, 3000); // fir har 3 second
+
+    return () => clearInterval(pollRef.current);
+  }, [currentRequestId]);
+
+  // Sirf step ko aage badhata hai — lekin sirf tab jab helper ne accept kar liya ho
+  useEffect(() => {
+    if (requestStatus !== "accepted") return; // 👈 NAYA: jab tak accept nahi, animation shuru mat karo
+
     setStep(0);
     setArrived(false);
     clearInterval(intervalRef.current);
@@ -52,10 +90,9 @@ export default function TrackingScreen() {
 
     return () => clearInterval(intervalRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [w.name]);
+  }, [w.name, requestStatus]);
 
   // Jab step apne max tak pahunch jaaye, tabhi arrival wale side-effects chalao
-  // (setArrived, showToast, goTo) — ye ab render ke dauraan nahi, effect ke andar hote hain
   useEffect(() => {
     if (step >= totalSteps && !arrived) {
       setArrived(true);
@@ -69,6 +106,40 @@ export default function TrackingScreen() {
   const [cx, cy] = PATH[step];
   const etaText = arrived ? 0 : etaSeries[step];
 
+  // 👇 NAYA: Jab tak helper ne response nahi diya, "wait" screen dikhao
+  if (requestStatus === "pending") {
+    return (
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center animate-fadeIn">
+        <div className="w-14 h-14 rounded-full border-4 border-accent-2 border-t-transparent animate-spin mb-6" />
+        <div className="text-lg font-bold font-hindi mb-2">Helper ka jawab ka wait kar rahe hain...</div>
+        <div className="text-sm text-text-dim font-hindi">
+          Aapki request bhej di gayi hai. Jaise hi helper accept karega, tracking shuru ho jaayegi.
+        </div>
+      </div>
+    );
+  }
+
+  // 👇 NAYA: Agar helper ne reject kar diya
+  if (requestStatus === "rejected") {
+    return (
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center animate-fadeIn">
+        <div className="text-5xl mb-4">😔</div>
+        <div className="text-lg font-bold font-hindi mb-2">Helper ne request reject kar di</div>
+        <div className="text-sm text-text-dim font-hindi mb-6">
+          Koi baat nahi — dusra helper dhundte hain aapke liye.
+        </div>
+        <button
+          onClick={() => goTo("issues")}
+          className="px-6 py-3 rounded-2xl font-display font-bold text-[15px] text-[#171009]"
+          style={{ background: "linear-gradient(135deg, #FF6A3D, #ff8a5c)" }}
+        >
+          <span className="font-hindi">Dusra Helper Dhundo</span>
+        </button>
+      </div>
+    );
+  }
+
+  // Neeche wala sab kuch sirf tab dikhega jab requestStatus === "accepted"
   return (
     <div className="absolute inset-0 flex flex-col animate-fadeIn">
       <div className="relative h-[260px] rounded-b-[28px] overflow-hidden track-map-bg">

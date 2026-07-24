@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useApp } from "../context/AppContext";
 
 export default function AIMatchingScreen() {
-  const { goTo, selectedIssue, setWinner, user } = useApp();
+  const { goTo, selectedIssue, setWinner, user, setCurrentRequestId } = useApp();
   const [candidates, setCandidates] = useState([]);
   const [revealedScores, setRevealedScores] = useState(false);
   const [showWinner, setShowWinner] = useState(false);
@@ -104,6 +104,7 @@ export default function AIMatchingScreen() {
       });
       const data = await res.json();
       console.log("Request created:", data);
+      setCurrentRequestId(data._id);   // 👈 NAYA — is ID se tracking screen status poll karegi
       goTo("tracking");
     } catch (err) {
       console.error("Request create karne mein error:", err);
