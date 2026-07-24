@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useApp } from "../context/AppContext";
+import { getCurrentLocation } from "../utils";
 
 export default function AIMatchingScreen() {
   const { goTo, selectedIssue, setWinner, user, setCurrentRequestId } = useApp();
   const [candidates, setCandidates] = useState([]);
   const [revealedScores, setRevealedScores] = useState(false);
   const [showWinner, setShowWinner] = useState(false);
-  const [statusText, setStatusText] = useState("Nearby helpers scan ho rahe hain...");
+  const [statusText, setStatusText] = useState("Aapki location le rahe hain...");
+
+  // 👇 NAYA: real GPS location yahan store hogi
+  const [userLocation, setUserLocation] = useState(null);
 
   // 👇 Naya: user manually kisko select karta hai, wo yahan track hota hai.
   // null hone ka matlab hai "AI ke default winner (candidates[0]) ko hi use karo"
@@ -18,12 +22,26 @@ export default function AIMatchingScreen() {
 
     async function fetchMatches() {
       try {
+        // 👇 NAYA: hardcoded location ki jagah real GPS location lo
+        setStatusText("Aapki location le rahe hain...");
+        let location;
+        try {
+          location = await getCurrentLocation();
+          setUserLocation(location);
+        } catch (locErr) {
+          console.error("Location nahi mil payi:", locErr);
+          setStatusText("Location access nahi mili — settings check karo");
+          return;
+        }
+
+        setStatusText("Nearby helpers scan ho rahe hain...");
+
         const res = await fetch("http://localhost:5000/api/match", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            lat: 26.4499,      // abhi ke liye hardcoded test location
-            lng: 80.3319,
+            lat: location.lat,
+            lng: location.lng,
             serviceType: selectedIssue || "mechanic"
           })
         });
@@ -97,14 +115,15 @@ export default function AIMatchingScreen() {
           userId: user._id,
           helperId: chosenData.id,
           issueType: selectedIssue || "mechanic",
-          userLocation: { lat: 26.4499, lng: 80.3319 },
+          // 👇 NAYA: real location use ho rahi hai, hardcoded nahi
+          userLocation: userLocation || { lat: 26.4499, lng: 80.3319 },
           matchScore: chosenData.matchPercent,
           estimatedArrivalMin: chosenData.etaMin,
         }),
       });
       const data = await res.json();
       console.log("Request created:", data);
-      setCurrentRequestId(data._id);   // 👈 NAYA — is ID se tracking screen status poll karegi
+      setCurrentRequestId(data._id);   // 👈 is ID se tracking screen status poll karegi
       goTo("tracking");
     } catch (err) {
       console.error("Request create karne mein error:", err);
