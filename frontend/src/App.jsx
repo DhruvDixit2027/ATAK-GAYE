@@ -6,12 +6,13 @@ import IssueSelectScreen from "./components/IssueSelectScreen";
 import AIMatchingScreen from "./components/AIMatchingScreen";
 import TrackingScreen from "./components/TrackingScreen";
 import DoneScreen from "./components/DoneScreen";
-import UserDetailsScreen from "./components/UserDetailsScreen"; // 👈 naya import
+import UserDetailsScreen from "./components/UserDetailsScreen";
+import RequestHistoryScreen from "./components/RequestHistoryScreen";
+import ProfileScreen from "./components/ProfileScreen";
 
 function ScreenRouter() {
-  const { screen, user } = useApp(); // 👈 user bhi lo
+  const { screen, user } = useApp();
 
-  // 👇 agar user ki details save nahi hain, to sabse pehle wahi form dikhao
   if (!user) {
     return <UserDetailsScreen />;
   }
@@ -27,6 +28,12 @@ function ScreenRouter() {
       return <TrackingScreen />;
     case "done":
       return <DoneScreen />;
+    case "requests":
+      return <RequestHistoryScreen />;
+    case "profile":
+      return <ProfileScreen />;
+    case "editProfile":
+      return <UserDetailsScreen editMode />;
     default:
       return <HomeScreen />;
   }
