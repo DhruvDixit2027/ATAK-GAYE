@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema({
     enum: ['bike', 'car', 'scooter', 'other'],
     default: 'bike',
   },
+  profilePhoto: {
+    type: String,
+    default: null,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

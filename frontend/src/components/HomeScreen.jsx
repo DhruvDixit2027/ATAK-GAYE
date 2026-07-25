@@ -181,15 +181,15 @@ export default function HomeScreen() {
         }}
       />
 
-      <div className="relative flex-1 overflow-y-auto pb-32">
-        <div className="px-4 sm:px-5 pt-8 sm:pt-12 max-w-md mx-auto w-full">
+      <div className="relative flex-1 overflow-y-auto pb-24">
+        <div className="px-4 sm:px-5 pt-5 sm:pt-6 max-w-md mx-auto w-full">
           {/* Header — logo/name gets its own full-width row so it never gets squeezed */}
           <div className="fade-in-up flex items-center gap-3">
             <img
               src={logo}
               alt="Atak Gaye logo"
               className="
-              h-12 w-12 sm:h-14 sm:w-14
+              h-10 w-10 sm:h-11 sm:w-11
               shrink-0
               rounded-full
               object-cover
@@ -199,31 +199,30 @@ export default function HomeScreen() {
             />
 
             <div className="min-w-0 flex-1">
-              <div className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 whitespace-nowrap">
+              <div className="text-lg sm:text-xl font-black tracking-tight text-slate-900 whitespace-nowrap">
                 Atak Gaye
               </div>
-              <div className="text-xs sm:text-sm text-slate-500 truncate">
+              <div className="text-[11px] sm:text-xs text-slate-500 truncate">
                 Emergency Road Assistance
               </div>
             </div>
-          </div>
 
-          {/* Location pill — own row, right aligned, full text visible */}
-          <div className="fade-in-up delay-1 mt-3 flex justify-end">
+            {/* Location pill moved inline with header to save a row */}
             <div
               className="
               bg-white
               rounded-2xl
-              px-3.5 py-2
+              px-2.5 py-1.5
               shadow-lg
               border
               border-slate-100
-              max-w-full
+              max-w-[42%]
+              shrink-0
             "
             >
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <MapPin size={15} className="text-orange-500 shrink-0" />
-                <div className="text-xs font-semibold text-slate-700 truncate max-w-[220px] sm:max-w-[280px]">
+              <div className="flex items-center gap-1">
+                <MapPin size={13} className="text-orange-500 shrink-0" />
+                <div className="text-[10px] font-semibold text-slate-700 truncate">
                   {locationLabel}
                 </div>
               </div>
@@ -234,21 +233,21 @@ export default function HomeScreen() {
           <div
             className="
             fade-in-up delay-2
-            mt-6 sm:mt-9
-            rounded-3xl sm:rounded-[30px]
+            mt-3 sm:mt-4
+            rounded-2xl sm:rounded-3xl
             bg-white
-            p-5 sm:p-6
+            p-4 sm:p-5
             shadow-xl
             border
             border-slate-100
           "
           >
-            <div className="text-sm text-slate-500">{greeting.title}</div>
+            <div className="text-xs text-slate-500">{greeting.title}</div>
 
             <h1
               className="
-              mt-3 sm:mt-4
-              text-3xl sm:text-4xl
+              mt-1.5
+              text-2xl sm:text-3xl
               font-black
               leading-tight
               text-slate-900
@@ -257,11 +256,11 @@ export default function HomeScreen() {
               Stuck on the road?
             </h1>
 
-            <div className="mt-3 sm:mt-4 text-orange-500 font-bold text-lg sm:text-xl">
+            <div className="mt-1.5 text-orange-500 font-bold text-base sm:text-lg">
               We're just one tap away.
             </div>
 
-            <div className="mt-4 sm:mt-6 text-slate-500 leading-6 sm:leading-7 text-sm sm:text-base">
+            <div className="mt-2 text-slate-500 leading-5 text-xs sm:text-sm">
               {greeting.subtitle}
             </div>
           </div>
@@ -270,18 +269,18 @@ export default function HomeScreen() {
           <div
             className="
             fade-in-up delay-3
-            mt-4 sm:mt-6
-            rounded-3xl
+            mt-3
+            rounded-2xl
             bg-white
-            p-4 sm:p-5
+            p-3 sm:p-3.5
             shadow-lg
             border
             border-slate-100
             overflow-hidden
           "
           >
-            <div className="flex items-center gap-3">
-              <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14">
+            <div className="flex items-center gap-2.5">
+              <div className="relative shrink-0 w-9 h-9 sm:w-10 sm:h-10">
                 <svg
                   viewBox="0 0 48 48"
                   className="helper-bob w-full h-full"
@@ -306,23 +305,23 @@ export default function HomeScreen() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <div className="text-sm sm:text-base font-bold text-slate-900">
+                <div className="text-xs sm:text-sm font-bold text-slate-900">
                   Madad raaste mein hai
                 </div>
                 <div
                   key={helperMsgIndex}
-                  className="helper-msg-in text-xs sm:text-sm text-slate-500 truncate"
+                  className="helper-msg-in text-[11px] sm:text-xs text-slate-500 truncate"
                 >
                   {HELPER_MESSAGES[helperMsgIndex]}
                 </div>
               </div>
 
-              <div className="shrink-0 bg-green-50 text-green-600 text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-full">
+              <div className="shrink-0 bg-green-50 text-green-600 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full">
                 ON THE WAY
               </div>
             </div>
 
-            <div className="relative mt-4 h-6 overflow-hidden">
+            <div className="relative mt-2.5 h-5 overflow-hidden">
               <div
                 className="
                 absolute
@@ -335,17 +334,17 @@ export default function HomeScreen() {
               "
               />
               <div className="helper-walk absolute top-1/2 -translate-y-1/2">
-                <Car size={20} className="text-orange-500" />
+                <Car size={16} className="text-orange-500" />
               </div>
             </div>
           </div>
 
-          {/* Live location */}
+          {/* Live location — compact version */}
           <div
             className="
             fade-in-up delay-4
-            mt-6 sm:mt-8
-            rounded-3xl sm:rounded-[28px]
+            mt-3
+            rounded-2xl
             overflow-hidden
             bg-gradient-to-br
             from-slate-900
@@ -364,14 +363,41 @@ export default function HomeScreen() {
               }}
             />
 
-            <div className="relative p-5 sm:p-6">
+            <div className="relative p-3.5 sm:p-4">
               <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-white text-lg sm:text-xl font-bold">
-                    Live Location
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="relative shrink-0">
+                    <div
+                      className="
+                      absolute
+                      -inset-2
+                      rounded-full
+                      bg-orange-500/25
+                      animate-ping-slow
+                    "
+                    />
+                    <div
+                      className="
+                      relative
+                      h-9 w-9
+                      rounded-full
+                      bg-orange-500
+                      flex
+                      items-center
+                      justify-center
+                      shadow-xl
+                    "
+                    >
+                      <Navigation size={16} className="text-white" />
+                    </div>
                   </div>
-                  <div className="text-slate-300 mt-2 sm:mt-3 text-xs sm:text-sm">
-                    Shared with nearest helpers
+                  <div className="min-w-0">
+                    <div className="text-white text-sm font-bold">
+                      Live Location
+                    </div>
+                    <div className="text-slate-300 text-[11px] truncate">
+                      {locationLabel}
+                    </div>
                   </div>
                 </div>
 
@@ -380,55 +406,22 @@ export default function HomeScreen() {
                   bg-white/10
                   backdrop-blur-xl
                   rounded-full
-                  px-3 py-1.5 sm:px-4 sm:py-2
+                  px-2.5 py-1
                   flex
                   items-center
-                  gap-2
+                  gap-1.5
                   shrink-0
                 "
                 >
-                  <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                  <div className="text-white text-xs sm:text-sm">LIVE</div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  <div className="text-white text-[10px]">LIVE</div>
                 </div>
-              </div>
-
-              <div className="mt-8 sm:mt-12 flex justify-center">
-                <div className="relative">
-                  <div
-                    className="
-                    absolute
-                    -inset-5 sm:-inset-6
-                    rounded-full
-                    bg-orange-500/25
-                    animate-ping-slow
-                  "
-                  />
-                  <div
-                    className="
-                    relative
-                    h-14 w-14 sm:h-16 sm:w-16
-                    rounded-full
-                    bg-orange-500
-                    flex
-                    items-center
-                    justify-center
-                    shadow-2xl
-                  "
-                  >
-                    <Navigation size={26} className="text-white sm:hidden" />
-                    <Navigation size={30} className="text-white hidden sm:block" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 sm:mt-14 text-center text-slate-300 text-sm sm:text-base px-2 truncate">
-                {locationLabel}
               </div>
             </div>
           </div>
 
           {/* SOS */}
-          <div className="pop-in delay-5 mt-14 sm:mt-16 flex justify-center">
+          <div className="pop-in delay-5 mt-6 sm:mt-7 flex justify-center">
             <button
               onClick={() => openIssue(null)}
               className="relative active:scale-90 transition-transform"
@@ -437,7 +430,7 @@ export default function HomeScreen() {
               <div
                 className="
                 absolute
-                -inset-4 sm:-inset-6
+                -inset-3 sm:-inset-4
                 rounded-full
                 bg-red-500/30
                 blur-xl
@@ -448,7 +441,7 @@ export default function HomeScreen() {
               <div
                 className="
                 absolute
-                -inset-7 sm:-inset-10
+                -inset-5 sm:-inset-6
                 rounded-full
                 border-2
                 border-dashed
@@ -459,7 +452,7 @@ export default function HomeScreen() {
               <div
                 className="
                 relative
-                w-32 h-32 sm:w-44 sm:h-44
+                w-24 h-24 sm:w-28 sm:h-28
                 rounded-full
                 bg-gradient-to-br
                 from-red-400
@@ -469,7 +462,7 @@ export default function HomeScreen() {
                 flex-col
                 items-center
                 justify-center
-                gap-1
+                gap-0.5
                 text-white
                 shadow-[0_25px_50px_rgba(225,29,72,.5)]
                 sos-breathe
@@ -477,71 +470,58 @@ export default function HomeScreen() {
                 ring-white/40
               "
               >
-                <Siren size={22} className="sm:hidden" />
-                <Siren size={28} className="hidden sm:block" />
-                <span className="text-2xl sm:text-4xl font-black tracking-wide">
+                <Siren size={18} />
+                <span className="text-xl sm:text-2xl font-black tracking-wide">
                   SOS
                 </span>
               </div>
             </button>
           </div>
 
-          <div className="fade-in-up delay-6 mt-5 sm:mt-8 text-center">
-            <p className="text-slate-600 text-xs sm:text-sm">
+          <div className="fade-in-up delay-6 mt-2.5 text-center">
+            <p className="text-slate-600 text-[11px] sm:text-xs">
               Tap the SOS button for immediate roadside assistance.
             </p>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-8 sm:mt-12">
-            <div className="fade-in-up delay-6 bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-lg border border-slate-100 min-w-0 hover:-translate-y-1 transition-transform">
-              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-orange-100 flex items-center justify-center">
-                <Clock3 className="text-orange-500" size={18} />
-              </div>
-              <div className="mt-3 sm:mt-6 text-lg sm:text-3xl font-black text-slate-900">
-                2m
-              </div>
-              <div className="text-slate-500 text-[10px] sm:text-sm mt-1 leading-tight break-words">
+          {/* Stats — compact inline strip instead of tall cards */}
+          <div className="fade-in-up delay-6 mt-4 sm:mt-5 bg-white rounded-2xl shadow-lg border border-slate-100 flex items-center divide-x divide-slate-100">
+            <div className="flex-1 flex flex-col items-center py-2.5">
+              <Clock3 className="text-orange-500" size={16} />
+              <div className="mt-1 text-sm font-black text-slate-900">2m</div>
+              <div className="text-slate-500 text-[9px] leading-tight">
                 Avg Response
               </div>
             </div>
-
-            <div className="fade-in-up delay-7 bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-lg border border-slate-100 min-w-0 hover:-translate-y-1 transition-transform">
-              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-yellow-100 flex items-center justify-center">
-                <Star className="text-yellow-500" size={18} />
-              </div>
-              <div className="mt-3 sm:mt-6 text-lg sm:text-3xl font-black text-slate-900">
-                4.9
-              </div>
-              <div className="text-slate-500 text-[10px] sm:text-sm mt-1 leading-tight break-words">
+            <div className="flex-1 flex flex-col items-center py-2.5">
+              <Star className="text-yellow-500" size={16} />
+              <div className="mt-1 text-sm font-black text-slate-900">4.9</div>
+              <div className="text-slate-500 text-[9px] leading-tight">
                 Rating
               </div>
             </div>
-
-            <div className="fade-in-up delay-8 bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-lg border border-slate-100 min-w-0 hover:-translate-y-1 transition-transform">
-              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-green-100 flex items-center justify-center">
-                <ShieldCheck className="text-green-600" size={18} />
-              </div>
-              <div className="mt-3 sm:mt-6 text-lg sm:text-3xl font-black text-slate-900">
+            <div className="flex-1 flex flex-col items-center py-2.5">
+              <ShieldCheck className="text-green-600" size={16} />
+              <div className="mt-1 text-sm font-black text-slate-900">
                 500+
               </div>
-              <div className="text-slate-500 text-[10px] sm:text-sm mt-1 leading-tight break-words">
+              <div className="text-slate-500 text-[9px] leading-tight">
                 Helpers
               </div>
             </div>
           </div>
 
           {/* Quick Help */}
-          <div className="mt-8 sm:mt-16">
-            <div className="flex items-center justify-between mb-4 sm:mb-5">
-              <h2 className="text-lg sm:text-xl font-black text-slate-900">
+          <div className="mt-5 sm:mt-6">
+            <div className="flex items-center justify-between mb-2.5">
+              <h2 className="text-base sm:text-lg font-black text-slate-900">
                 Quick Help
               </h2>
               <button
                 onClick={() => openIssue(null)}
                 className="
                 text-orange-500
-                text-xs sm:text-sm
+                text-xs
                 font-bold
                 flex
                 items-center
@@ -556,35 +536,36 @@ export default function HomeScreen() {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-6">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
               {ISSUES.slice(0, 4).map((item, index) => {
                 const icons = [
-                  <Car size={22} />,
-                  <FuelIcon size={22} />,
-                  <BatteryCharging size={22} />,
-                  <Wrench size={22} />,
+                  <Car size={18} />,
+                  <FuelIcon size={18} />,
+                  <BatteryCharging size={18} />,
+                  <Wrench size={18} />,
                 ];
 
                 return (
-                  <div
-                    key={item.id}
-                    style={{ animationDelay: `${0.7 + index * 0.1}s` }}
-                    className="fade-in-up bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all min-w-0"
-                  >
-                    <div className="w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-orange-50 flex items-center justify-center text-orange-500">
+                 <div
+                  key={item.id}
+                   onClick={() => openIssue(item.id)}
+                   style={{ animationDelay: `${0.7 + index * 0.1}s` }}
+                     className="fade-in-up bg-white rounded-2xl p-3 sm:p-3.5 shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all min-w-0 cursor-pointer"
+>
+                    <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
                       {icons[index]}
                     </div>
-                    <div className="mt-3 sm:mt-6 text-sm sm:text-lg font-bold text-slate-900 truncate">
+                    <div className="mt-2 text-xs sm:text-sm font-bold text-slate-900 truncate">
                       {item.name}
                     </div>
-                    <div className="mt-1.5 sm:mt-3 text-xs sm:text-sm text-slate-500 leading-5 sm:leading-6 line-clamp-2">
+                    <div className="mt-1 text-[10px] sm:text-xs text-slate-500 leading-4 line-clamp-2">
                       {item.sub}
                     </div>
-                    <div className="mt-3 sm:mt-6 flex items-center justify-between">
-                      <span className="text-orange-500 font-semibold text-xs sm:text-base">
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-orange-500 font-semibold text-[11px] sm:text-xs">
                         Get Help
                       </span>
-                      <ChevronRight className="text-orange-500" size={16} />
+                      <ChevronRight className="text-orange-500" size={14} />
                     </div>
                   </div>
                 );
@@ -592,36 +573,24 @@ export default function HomeScreen() {
             </div>
           </div>
 
-          {/* Emergency Card */}
+          {/* Emergency Card — compact slim bar instead of tall card */}
           <div
             className="
             fade-in-up delay-9
-            mt-8 sm:mt-14
-            rounded-3xl sm:rounded-[32px]
+            mt-5 sm:mt-6
+            rounded-2xl
             bg-gradient-to-r
             from-green-500
             to-green-600
-            p-5 sm:p-6
+            p-3.5 sm:p-4
             shadow-2xl
             text-white
           "
           >
-            <div className="flex justify-between items-center gap-3">
-              <div className="min-w-0">
-                <div className="text-xl sm:text-2xl font-black truncate">
-                  Highway Patrol
-                </div>
-                <div className="mt-2 sm:mt-4 text-green-100 text-sm sm:text-base">
-                  24×7 Emergency Support
-                </div>
-                <div className="mt-4 sm:mt-7 text-4xl sm:text-5xl font-black">
-                  1073
-                </div>
-              </div>
-
+            <div className="flex items-center gap-3">
               <div
                 className="
-                w-16 h-16 sm:w-20 sm:h-20
+                w-11 h-11
                 shrink-0
                 rounded-full
                 bg-white/20
@@ -630,30 +599,38 @@ export default function HomeScreen() {
                 justify-center
               "
               >
-                <Phone size={28} />
+                <Phone size={20} />
               </div>
-            </div>
 
-            <button
-              onClick={() => showToast("📞 Calling Highway Patrol...")}
-              className="
-              mt-6 sm:mt-10
-              w-full
-              rounded-2xl
-              bg-white
-              text-green-600
-              py-3.5 sm:py-4
-              font-bold
-              text-base sm:text-lg
-              active:scale-95
-              transition-all
-            "
-            >
-              Call Now
-            </button>
+              <div className="min-w-0 flex-1">
+                <div className="text-base font-black truncate">
+                  Highway Patrol
+                </div>
+                <div className="text-green-100 text-[11px]">
+                  24×7 Emergency · <span className="font-bold text-white">1073</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => showToast("📞 Calling Highway Patrol...")}
+                className="
+                shrink-0
+                rounded-xl
+                bg-white
+                text-green-600
+                px-4 py-2
+                font-bold
+                text-xs sm:text-sm
+                active:scale-95
+                transition-all
+              "
+              >
+                Call Now
+              </button>
+            </div>
           </div>
 
-          <div className="h-24 sm:h-28" />
+          <div className="h-16" />
         </div>
       </div>
 

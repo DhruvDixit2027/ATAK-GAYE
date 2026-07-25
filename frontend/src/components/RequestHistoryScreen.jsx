@@ -1,14 +1,24 @@
 import React, { useEffect, useState } from "react";
+import { ChevronLeft, Fuel, Wrench, Zap, Battery, Truck, Circle } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import BottomNav from "./BottomNav";
 
-const statusLabels = {
-  pending: { text: "Pending", color: "text-accent-2" },
-  matched: { text: "Matched", color: "text-accent-2" },
-  accepted: { text: "Accepted", color: "text-safe" },
-  rejected: { text: "Reject ho gaya", color: "text-red-400" },
-  "in-progress": { text: "Chal raha hai", color: "text-accent-2" },
-  completed: { text: "Complete", color: "text-safe" },
-  cancelled: { text: "Cancel ho gaya", color: "text-text-dim" },
+const statusStyles = {
+  pending: { text: "Pending", bg: "bg-yellow-100", color: "text-yellow-700" },
+  matched: { text: "Matched", bg: "bg-yellow-100", color: "text-yellow-700" },
+  accepted: { text: "Accepted", bg: "bg-green-100", color: "text-green-700" },
+  rejected: { text: "Reject ho gaya", bg: "bg-red-100", color: "text-red-600" },
+  "in-progress": { text: "Chal raha hai", bg: "bg-yellow-100", color: "text-yellow-700" },
+  completed: { text: "Complete", bg: "bg-green-100", color: "text-green-700" },
+  cancelled: { text: "Cancel ho gaya", bg: "bg-slate-100", color: "text-slate-500" },
+};
+
+const ISSUE_ICONS = {
+  petrol: Fuel,
+  mechanic: Wrench,
+  tyre: Circle,
+  battery: Battery,
+  tow: Truck,
 };
 
 export default function RequestHistoryScreen() {
@@ -33,56 +43,94 @@ export default function RequestHistoryScreen() {
   }, [user]);
 
   return (
-    <div className="absolute inset-0 pt-[42px] flex flex-col animate-fadeIn">
-      <div className="flex items-center gap-2.5 px-5 pt-3.5 pb-3">
-        <div
-          onClick={() => goTo("home")}
-          className="w-[34px] h-[34px] rounded-[10px] bg-card border border-line flex items-center justify-center cursor-pointer text-base"
-        >
-          ←
-        </div>
-        <div className="font-display font-bold text-[19px] font-hindi">Meri Requests</div>
-      </div>
+    <div className="absolute inset-0 bg-slate-50 flex flex-col overflow-hidden">
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle at top,#FFF2E9 0%,transparent 45%)",
+        }}
+      />
 
-      <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-[100px]">
-        {loading && (
-          <div className="text-text-dim text-sm text-center mt-10 font-hindi">Load ho raha hai...</div>
-        )}
-
-        {!loading && requests.length === 0 && (
-          <div className="text-text-dim text-sm text-center mt-10 font-hindi">
-            Abhi tak koi request nahi hai
-          </div>
-        )}
-
-        {requests.map((r) => {
-          const status = statusLabels[r.status] || { text: r.status, color: "text-text-dim" };
-          return (
+      <div className="relative flex-1 overflow-y-auto pb-24">
+        <div className="px-4 sm:px-5 pt-5 sm:pt-6 max-w-md mx-auto w-full">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-5">
             <div
-              key={r._id}
-              className="bg-card border border-line rounded-2xl px-4 py-3.5 mb-2.5"
+              onClick={() => goTo("home")}
+              className="w-9 h-9 rounded-xl bg-white shadow-lg border border-slate-100 flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
             >
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="text-[13.5px] font-bold font-hindi capitalize">{r.issueType}</div>
-                <div className={`text-[11px] font-bold ${status.color}`}>{status.text}</div>
-              </div>
-              {r.helperId && (
-                <div className="text-[11.5px] text-text-dim font-hindi">
-                  Helper: {r.helperId.name} · {r.helperId.vehicleType}
-                </div>
-              )}
-              <div className="text-[10.5px] text-text-dim mt-1">
-                {new Date(r.createdAt).toLocaleString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </div>
+              <ChevronLeft size={18} className="text-slate-700" />
             </div>
-          );
-        })}
+            <div className="text-lg sm:text-xl font-black text-slate-900">
+              Meri Requests
+            </div>
+          </div>
+
+          {loading && (
+            <div className="text-slate-500 text-sm text-center mt-10">
+              Load ho raha hai...
+            </div>
+          )}
+
+          {!loading && requests.length === 0 && (
+            <div className="text-slate-500 text-sm text-center mt-10">
+              Abhi tak koi request nahi hai
+            </div>
+          )}
+
+          {requests.map((r) => {
+            const status = statusStyles[r.status] || {
+              text: r.status,
+              bg: "bg-slate-100",
+              color: "text-slate-500",
+            };
+            const Icon = ISSUE_ICONS[r.issueType] || Wrench;
+
+            return (
+              <div
+                key={r._id}
+                className="bg-white rounded-2xl px-4 py-3.5 mb-3 shadow-lg border border-slate-100"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
+                    <Icon size={18} className="text-orange-500" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-sm font-bold text-slate-900 capitalize truncate">
+                        {r.issueType}
+                      </div>
+                      <div
+                        className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${status.bg} ${status.color}`}
+                      >
+                        {status.text}
+                      </div>
+                    </div>
+                    {r.helperId && (
+                      <div className="text-[11px] text-slate-500 mt-0.5 truncate">
+                        Helper: {r.helperId.name} · {r.helperId.vehicleType}
+                      </div>
+                    )}
+                    <div className="text-[10px] text-slate-400 mt-1">
+                      {new Date(r.createdAt).toLocaleString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="h-16" />
+        </div>
       </div>
+
+      <BottomNav />
     </div>
   );
 }
