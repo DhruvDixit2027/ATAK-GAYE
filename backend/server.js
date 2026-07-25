@@ -2,7 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const db = require('./src/config/db');
+const connectDB = require('./src/config/db');   // 👈 yahan change kiya
+
 const matchRoutes = require('./src/routes/matchRoutes');
 const requestRoutes = require('./src/routes/requestRoutes');
 const userRoutes = require('./src/routes/userRoutes');
@@ -11,24 +12,22 @@ const authRoutes = require('./src/routes/authRoutes');
 
 const app = express();
 
-// Middleware - runs on every request
-app.use(cors());              // allows your frontend to call this backend
-app.use(express.json({ limit: '10mb' }));     // lets us read JSON sent from the frontend
+// Middleware
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
 
-// Uploaded images ko serve karne ke liye (e.g. /uploads/12345.jpg)
-// __dirname use kiya taaki ye hamesha server.js ke saath waale
-// "uploads" folder ko point kare, chahe terminal kahin se bhi chalao
+// Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Connect to database
-connectDB();
+connectDB();   // 👈 ab sahi call hoga
 
-// Health check - visit this in browser to confirm server is alive
+// Health check
 app.get('/', (req, res) => {
   res.json({ message: 'Atak Gaye backend chal raha hai 🚀' });
 });
 
-// Mount our routes under /api
+// Routes
 app.use('/api', matchRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/users', userRoutes);
