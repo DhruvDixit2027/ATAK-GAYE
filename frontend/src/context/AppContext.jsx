@@ -15,6 +15,11 @@ export function AppProvider({ children }) {
     return saved ? JSON.parse(saved) : null;
   });
 
+  // 👇 NAYA: OTP verify ho chuka hai lekin user abhi registered nahi hai —
+  // isse UserDetailsScreen (registration) ko pata chalta hai kis phone
+  // number ke liye details fill karni hain
+  const [verifiedPhone, setVerifiedPhone] = useState(null);
+
   const goTo = useCallback((id) => setScreen(id), []);
 
   const showToast = useCallback((msg) => {
@@ -26,6 +31,15 @@ export function AppProvider({ children }) {
   const setUser = useCallback((userData) => {
     setUserState(userData);
     localStorage.setItem("atakGayeUser", JSON.stringify(userData));
+    setVerifiedPhone(null); // registration/login poora hua, ab isko clear karo
+  }, []);
+
+  // 👇 NAYA: logout ke liye (agar future mein chahiye ho)
+  const logout = useCallback(() => {
+    setUserState(null);
+    localStorage.removeItem("atakGayeUser");
+    setVerifiedPhone(null);
+    setScreen("home");
   }, []);
 
   const value = {
@@ -41,6 +55,9 @@ export function AppProvider({ children }) {
     showToast,
     user,
     setUser,
+    verifiedPhone,         // 👈 NAYA
+    setVerifiedPhone,      // 👈 NAYA
+    logout,                // 👈 NAYA
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

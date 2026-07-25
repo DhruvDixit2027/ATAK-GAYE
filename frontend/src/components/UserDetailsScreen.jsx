@@ -3,12 +3,21 @@ import { ChevronLeft, User, Phone, Bike, Camera } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import BottomNav from "./BottomNav";
 
+const BACKEND_URL = "http://localhost:5000";
+
 export default function UserDetailsScreen({ editMode = false }) {
-  const { goTo, user, setUser } = useApp();
+  const { goTo, user, setUser, verifiedPhone } = useApp();
   const [name, setName] = useState(editMode && user ? user.name : "");
-  const [phone, setPhone] = useState(editMode && user ? user.phone : "");
+  // 👇 NAYA: agar login flow se aaye ho (OTP verify ho chuka), to phone
+  // pehle se bhara hua aayega
+  const [phone, setPhone] = useState(
+    editMode && user ? user.phone : verifiedPhone || ""
+  );
   const [vehicleType, setVehicleType] = useState(editMode && user ? user.vehicleType : "bike");
-  const [photoPreview, setPhotoPreview] = useState(editMode && user ? user.profilePhoto : null);
+  const [photoPreview, setPhotoPreview] = useState(
+    editMode && user && user.profilePhoto ? `${BACKEND_URL}${user.profilePhoto}` : null
+  );
+  const [photoFile, setPhotoFile] = useState(null); // 👈 NAYA: actual File object, upload ke liye
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -17,11 +26,11 @@ export default function UserDetailsScreen({ editMode = false }) {
       setName(user.name || "");
       setPhone(user.phone || "");
       setVehicleType(user.vehicleType || "bike");
-      setPhotoPreview(user.profilePhoto || null);
+      setPhotoPreview(user.profilePhoto ? `${BACKEND_URL}${user.profilePhoto}` : null);
     }
   }, [editMode, user]);
 
-  // 👇 NAYA: photo select hone par usko base64 mein convert karke preview dikhao
+  // Photo select hone par preview ke liye base64 banao, upload ke liye asli File bhi rakho
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -31,9 +40,11 @@ export default function UserDetailsScreen({ editMode = false }) {
       return;
     }
 
+    setPhotoFile(file); // 👈 ye wala upload hoga, base64 nahi
+
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPhotoPreview(reader.result); // base64 string
+      setPhotoPreview(reader.result); // sirf preview dikhane ke liye
       setError("");
     };
     reader.readAsDataURL(file);
@@ -49,25 +60,51 @@ export default function UserDetailsScreen({ editMode = false }) {
 
     try {
       const url = editMode
-        ? `http://localhost:5000/api/users/${user._id}`
-        : "http://localhost:5000/api/users/create";
+        ? `${BACKEND_URL}/api/users/${user._id}`
+        : `${BACKEND_URL}/api/users/create`;
       const method = editMode ? "PATCH" : "POST";
+
+      // 👇 NAYA: JSON.stringify ki jagah FormData — image ab base64 nahi, asli file jaati hai
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("phone", phone);
+      formData.append("vehicleType", vehicleType);
+      formData.append(
+        "currentLocation",
+        JSON.stringify(user?.currentLocation || { lat: 26.4499, lng: 80.3319 })
+      );
+      if (photoFile) {
+        formData.append("profilePhoto", photoFile);
+      }
 
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          phone,
-          vehicleType,
-          profilePhoto: photoPreview,   // 👈 NAYA
-          currentLocation: user?.currentLocation || { lat: 26.4499, lng: 80.3319 },
-        }),
+        body: formData,
+        // Content-Type header jaan-bujhke nahi laga rahe —
+        // browser khud sahi multipart boundary ke saath set karega
       });
-      const data = await res.json();
+
+      // Response ka Content-Type check karo - agar JSON nahi hai
+      // (jaise server ka HTML error page) to seedha res.json() call
+      // karne se crash ho jaata hai
+      const contentType = res.headers.get("content-type") || "";
+      const isJson = contentType.includes("application/json");
+      const data = isJson ? await res.json() : null;
 
       if (!res.ok) {
-        setError(data.error || "Kuch galat ho gaya");
+        if (res.status === 413) {
+          setError("Photo ka size zyada bada hai. Chhoti photo try karo.");
+        } else if (data && data.error) {
+          setError(data.error);
+        } else {
+          setError(`Kuch galat ho gaya (error ${res.status})`);
+        }
+        setLoading(false);
+        return;
+      }
+
+      if (!data) {
+        setError("Server se sahi response nahi mila");
         setLoading(false);
         return;
       }
@@ -114,7 +151,7 @@ export default function UserDetailsScreen({ editMode = false }) {
               : "Helper aapko contact kar sake, isliye ye zaroori hai"}
           </div>
 
-          {/* 👇 NAYA: Photo upload */}
+          {/* Photo upload */}
           <div className="flex flex-col items-center mb-5">
             <label className="relative cursor-pointer group">
               <div className="w-20 h-20 rounded-full overflow-hidden shadow-xl ring-4 ring-white bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center">
@@ -162,13 +199,18 @@ export default function UserDetailsScreen({ editMode = false }) {
             <div className="mb-3">
               <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 mb-1.5 ml-1">
                 <Phone size={13} className="text-orange-500" /> Phone number
+                <span className="text-[10px] text-green-600 font-bold ml-1">✓ Verified</span>
               </div>
               <input
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition-all"
+                className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-500 outline-none cursor-not-allowed"
                 placeholder="Phone number"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                readOnly
+                disabled
               />
+              <div className="text-[10px] text-slate-400 mt-1 ml-1">
+                Phone number change nahi ho sakta (OTP se verified hai)
+              </div>
             </div>
 
             <div className="mb-1">

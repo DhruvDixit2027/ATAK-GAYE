@@ -1,10 +1,22 @@
 import React from "react";
-import { ChevronLeft, User, Phone, Bike } from "lucide-react";
+import { ChevronLeft, User, Phone, Bike, LogOut } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import BottomNav from "./BottomNav";
 
+const BACKEND_URL = "http://localhost:5000";
+
+// profilePhoto kabhi purana base64 string ho sakta hai, kabhi naya
+// "/uploads/xyz.jpg" relative path — dono cases handle karo
+function resolvePhotoUrl(profilePhoto) {
+  if (!profilePhoto) return null;
+  if (profilePhoto.startsWith("data:")) return profilePhoto; // purana base64
+  if (profilePhoto.startsWith("http")) return profilePhoto; // already full URL
+  return `${BACKEND_URL}${profilePhoto}`; // naya relative path
+}
+
 export default function ProfileScreen() {
-  const { user, goTo } = useApp();
+  const { user, goTo, logout } = useApp();
+  const photoUrl = resolvePhotoUrl(user?.profilePhoto);
 
   return (
     <div className="absolute inset-0 bg-slate-50 flex flex-col overflow-hidden">
@@ -31,12 +43,12 @@ export default function ProfileScreen() {
             </div>
           </div>
 
-          {/* 👇 NAYA: Photo dikhao agar hai, warna letter wala fallback */}
+          {/* Photo dikhao agar hai, warna letter wala fallback */}
           <div className="flex flex-col items-center mt-6 mb-6">
             <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center shadow-xl ring-4 ring-white bg-gradient-to-br from-orange-400 to-orange-500">
-              {user?.profilePhoto ? (
+              {photoUrl ? (
                 <img
-                  src={user.profilePhoto}
+                  src={photoUrl}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
@@ -94,6 +106,15 @@ export default function ProfileScreen() {
             style={{ background: "linear-gradient(135deg, #FF6A3D, #ff8a5c)" }}
           >
             Edit karo
+          </button>
+
+          {/* Logout button */}
+          <button
+            onClick={logout}
+            className="w-full py-3.5 mt-2.5 rounded-2xl border border-red-200 bg-white text-red-500 text-sm font-bold shadow-sm active:scale-95 transition-transform flex items-center justify-center gap-2"
+          >
+            <LogOut size={16} />
+            Logout karo
           </button>
 
           <div className="h-16" />

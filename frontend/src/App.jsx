@@ -9,12 +9,18 @@ import DoneScreen from "./components/DoneScreen";
 import UserDetailsScreen from "./components/UserDetailsScreen";
 import RequestHistoryScreen from "./components/RequestHistoryScreen";
 import ProfileScreen from "./components/ProfileScreen";
+import LoginScreen from "./components/LoginScreen"; // 👈 NAYA
 
 function ScreenRouter() {
-  const { screen, user } = useApp();
+  const { screen, user, verifiedPhone } = useApp();
 
   if (!user) {
-    return <UserDetailsScreen />;
+    // 👇 NAYA: pehle login (phone + OTP), phir OTP verify hone ke baad
+    // agar number naya hai to registration (UserDetailsScreen) dikhao
+    if (verifiedPhone) {
+      return <UserDetailsScreen />;
+    }
+    return <LoginScreen />;
   }
 
   switch (screen) {
