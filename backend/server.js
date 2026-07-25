@@ -3,11 +3,11 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const db = require('./src/config/db');
-const matchRoutes = require('./routes/matchRoutes');
-const requestRoutes = require('./routes/requestRoutes');
-const userRoutes = require('./routes/userRoutes');
-const helperRoutes = require('./routes/helperRoutes');
-const authRoutes = require('./routes/authRoutes');
+const matchRoutes = require('./src/routes/matchRoutes');
+const requestRoutes = require('./src/routes/requestRoutes');
+const userRoutes = require('./src/routes/userRoutes');
+const helperRoutes = require('./src/routes/helperRoutes');
+const authRoutes = require('./src/routes/authRoutes');
 
 const app = express();
 
