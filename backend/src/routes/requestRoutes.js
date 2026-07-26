@@ -80,7 +80,8 @@ router.post('/create', async (req, res) => {
 // Ek specific request ka current status check karne ke liye (tracking screen isko poll karegi)
 router.get('/:requestId', async (req, res) => {
   try {
-    const request = await Request.findById(req.params.requestId);
+    const request = await Request.findById(req.params.requestId)
+      .populate('helperId', 'name phone vehicleType vehicleNumber rating');
     if (!request) return res.status(404).json({ error: 'Request not found' });
     res.json(request);
   } catch (err) {
@@ -94,6 +95,30 @@ router.get('/user/:userId', async (req, res) => {
       .populate('helperId', 'name vehicleType vehicleNumber rating')
       .sort({ createdAt: -1 });
     res.json(requests);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Helper ye call karta hai jab customer se OTP lekar submit kare — job complete
+router.post('/:requestId/complete', async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const request = await Request.findById(req.params.requestId);
+
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+    if (request.otp !== otp) {
+      return res.status(400).json({ error: 'OTP galat hai' });
+    }
+
+    request.status = 'completed';
+    request.completedAt = new Date();
+    await request.save();
+
+    emitRequestStatus(req.params.requestId, 'completed'); // customer ko turant pata chal jaayega
+
+    res.json(request);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

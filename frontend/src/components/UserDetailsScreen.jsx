@@ -5,7 +5,7 @@ import BottomNav from "./BottomNav";
 
 const BACKEND_URL = "http://localhost:5000";
 export default function UserDetailsScreen({ editMode = false }) {
-  const { goTo, user, setUser, verifiedPhone } = useApp();
+  const { goTo, user, setUser, verifiedPhone, liveLocation } = useApp();
   const [name, setName] = useState(editMode && user ? user.name : "");
   // 👇 agar login flow se aaye ho (OTP verify ho chuka), to phone
   // pehle se bhara hua aayega
@@ -56,6 +56,14 @@ export default function UserDetailsScreen({ editMode = false }) {
       setError("Naam aur phone number dono zaroori hai");
       return;
     }
+
+    // 👇 NAYA: real GPS location zaroori hai — hardcoded fallback ab nahi
+    // use karenge, warna backend mein galat coordinates save ho jaayenge
+    if (!liveLocation) {
+      setError("Location abhi mil nahi rahi — GPS on karke thodi der wait karo");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -71,7 +79,7 @@ export default function UserDetailsScreen({ editMode = false }) {
       formData.append("vehicleType", vehicleType);
       formData.append(
         "currentLocation",
-        JSON.stringify(user?.currentLocation || { lat: 26.4499, lng: 80.3319 })
+        JSON.stringify({ lat: liveLocation.lat, lng: liveLocation.lng })
       );
       if (photoFile) {
         formData.append("profilePhoto", photoFile);

@@ -102,6 +102,68 @@ export async function getCurrentLocation() {
   });
 }
 
+// 👇 NAYA: continuous live tracking — TrackingScreen jaisi jagah ke liye
+// jahan user move kare to location bhi live update honi chahiye
+// (getCurrentLocation() sirf ek baar fetch karta hai, ye function
+// hamesha chalta rehta hai jab tak "stop" na kiya jaaye).
+//
+// Usage:
+//   const stop = await watchLocation(
+//     (loc) => console.log(loc.lat, loc.lng, loc.accuracy),
+//     (err) => console.error(err)
+//   );
+//   // baad me: stop();
+export async function watchLocation(onUpdate, onError) {
+  if (Capacitor.isNativePlatform()) {
+    const permStatus = await Geolocation.checkPermissions();
+    if (permStatus.location !== "granted") {
+      const req = await Geolocation.requestPermissions();
+      if (req.location !== "granted") {
+        onError?.(new Error("Location permission denied"));
+        return () => {};
+      }
+    }
+
+    const watchId = await Geolocation.watchPosition(
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
+      (position, err) => {
+        if (err || !position) {
+          onError?.(err || new Error("Location update nahi mila"));
+          return;
+        }
+        const { latitude, longitude, accuracy } = position.coords;
+        onUpdate({ lat: latitude, lng: longitude, accuracy });
+      }
+    );
+
+    return () => Geolocation.clearWatch({ id: watchId }).catch(() => {});
+  }
+
+  // Web browser fallback
+  if (!navigator.geolocation) {
+    onError?.(new Error("Geolocation is not supported by this browser"));
+    return () => {};
+  }
+
+  const watchId = navigator.geolocation.watchPosition(
+    (position) => {
+      onUpdate({
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+      });
+    },
+    (error) => onError?.(error),
+    {
+      enableHighAccuracy: true,
+      timeout: 12000,
+      maximumAge: 0,
+    }
+  );
+
+  return () => navigator.geolocation.clearWatch(watchId);
+}
+
 // Coordinates se readable address nikalta hai (reverse geocoding)
 export async function getAddressFromCoords(lat, lng) {
   try {

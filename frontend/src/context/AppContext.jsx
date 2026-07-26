@@ -1,4 +1,5 @@
-import React, { createContext, useCallback, useContext, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { watchLocation } from "../utils";
 
 const AppContext = createContext(null);
 
@@ -14,6 +15,41 @@ export function AppProvider({ children }) {
     const saved = localStorage.getItem("atakGayeUser");
     return saved ? JSON.parse(saved) : null;
   });
+
+  // 👇 NAYA: real live GPS location — native APK pe accurate Capacitor GPS,
+  // web browser pe HTML5 fallback (utils.js ka watchLocation use karta hai —
+  // isi function ko HomeScreen ke getCurrentLocation() wali file mein bhi
+  // use kiya gaya hai, taaki poori app mein ek hi consistent location chale)
+  const [liveLocation, setLiveLocation] = useState(null); // { lat, lng, accuracy }
+  const [locationError, setLocationError] = useState(null);
+
+  useEffect(() => {
+    let stopWatch = () => {};
+    let cancelled = false;
+
+    watchLocation(
+      (loc) => {
+        if (!cancelled) {
+          setLiveLocation(loc);
+          setLocationError(null);
+        }
+      },
+      (err) => {
+        if (!cancelled) {
+          console.error("Location error:", err);
+          setLocationError(err.message || "Location error");
+        }
+      }
+    ).then((stop) => {
+      if (cancelled) stop();
+      else stopWatch = stop;
+    });
+
+    return () => {
+      cancelled = true;
+      stopWatch();
+    };
+  }, []);
 
   // 👇 NAYA: OTP verify ho chuka hai lekin user abhi registered nahi hai —
   // isse UserDetailsScreen (registration) ko pata chalta hai kis phone
@@ -55,6 +91,8 @@ export function AppProvider({ children }) {
     showToast,
     user,
     setUser,
+    liveLocation,          // 👈 NAYA — { lat, lng, accuracy } real GPS se
+    locationError,         // 👈 NAYA
     verifiedPhone,         // 👈 NAYA
     setVerifiedPhone,      // 👈 NAYA
     logout,                // 👈 NAYA

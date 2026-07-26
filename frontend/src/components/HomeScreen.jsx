@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { ISSUES } from "../data/helperPool";
-import { getCurrentLocation, getAddressFromCoords } from "../utils";
+import { getAddressFromCoords } from "../utils";
 import BottomNav from "./BottomNav";
 import logo from "../assets/atakgaye-logo.png";
 
@@ -26,7 +26,7 @@ const HELPER_MESSAGES = [
 ];
 
 export default function HomeScreen() {
-  const { goTo, setSelectedIssue, showToast } = useApp();
+  const { goTo, setSelectedIssue, showToast, liveLocation, locationError } = useApp();
 
   const [locationLabel, setLocationLabel] = useState(
     "Getting your location..."
@@ -61,27 +61,48 @@ export default function HomeScreen() {
     };
   }, []);
 
+  const lastGeocodedRef = React.useRef(null);
+
   useEffect(() => {
-    async function loadLocation() {
+    if (locationError) {
+      setLocationLabel("Location unavailable");
+      return;
+    }
+    if (!liveLocation) return;
+
+    // ~300m se kam move hua ho to dubara reverse-geocode mat karo
+    // (Nominatim free API rate-limited hai, har GPS tick pe call nahi bhejna)
+    const last = lastGeocodedRef.current;
+    if (last) {
+      const dLat = liveLocation.lat - last.lat;
+      const dLng = liveLocation.lng - last.lng;
+      const roughMeters = Math.sqrt(dLat ** 2 + dLng ** 2) * 111000;
+      if (roughMeters < 300) return;
+    }
+
+    let cancelled = false;
+
+    async function loadAddress() {
       try {
-        const loc = await getCurrentLocation();
+        const address = await getAddressFromCoords(
+          liveLocation.lat,
+          liveLocation.lng
+        );
+        if (cancelled) return;
 
-        const address = await getAddressFromCoords(loc.lat, loc.lng);
-
-        const short = address
-          .split(",")
-          .slice(0, 2)
-          .join(",")
-          .trim();
-
+        lastGeocodedRef.current = { lat: liveLocation.lat, lng: liveLocation.lng };
+        const short = address.split(",").slice(0, 2).join(",").trim();
         setLocationLabel(short || "Current Location");
       } catch {
-        setLocationLabel("Location unavailable");
+        if (!cancelled) setLocationLabel("Location unavailable");
       }
     }
 
-    loadLocation();
-  }, []);
+    loadAddress();
+    return () => {
+      cancelled = true;
+    };
+  }, [liveLocation, locationError]);
 
   const openIssue = (id) => {
     setSelectedIssue(id);

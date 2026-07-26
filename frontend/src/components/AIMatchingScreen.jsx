@@ -2,10 +2,17 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, Star, MapPin, CheckCircle2, Bot } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { BACKEND_URL } from "../config";
-import { getCurrentLocation, getAddressFromCoords } from "../utils";
-
+import { getAddressFromCoords } from "../utils";
 export default function AIMatchingScreen() {
-  const { goTo, selectedIssue, setWinner, user, setUser, setCurrentRequestId } = useApp();
+ const {
+  goTo,
+  selectedIssue,
+  setWinner,
+  user,
+  setUser,
+  setCurrentRequestId,
+  liveLocation,
+} = useApp();
   const [candidates, setCandidates] = useState([]);
   const [revealedScores, setRevealedScores] = useState(false);
   const [showWinner, setShowWinner] = useState(false);
@@ -23,23 +30,28 @@ export default function AIMatchingScreen() {
     async function fetchMatches() {
       try {
         setStatusText("Aapki location le rahe hain...");
-        let location;
-        try {
-          location = await getCurrentLocation();
-          setUserLocation(location);
+       if (!liveLocation) {
+  setStatusText("GPS signal ka wait ho raha hai...");
+  return;
+}
 
-          // 👇 NAYA: user object mein bhi current location save karo,
-          // taaki TrackingScreen live distance calculate kar sake
-          if (user) {
-            setUser({ ...user, currentLocation: location });
-          }
+const location = liveLocation;
 
-          getAddressFromCoords(location.lat, location.lng).then(setUserAddress);
-        } catch (locErr) {
-          console.error("Location nahi mil payi:", locErr);
-          setStatusText("Location access nahi mili — settings check karo");
-          return;
-        }
+setUserLocation(location);
+
+if (user) {
+  setUser({
+    ...user,
+    currentLocation: location,
+  });
+}
+
+try {
+  const address = await getAddressFromCoords(location.lat, location.lng);
+  setUserAddress(address);
+} catch (err) {
+  console.error("Address fetch failed:", err);
+}
 
         setStatusText("Nearby helpers scan ho rahe hain...");
         const res = await fetch(`${BACKEND_URL}/api/match`, {
@@ -89,7 +101,7 @@ export default function AIMatchingScreen() {
       clearTimeout(winnerTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIssue]);
+ }, [selectedIssue, liveLocation]);
 
   const chosenData = selectedId
     ? candidates.find((c) => c.id === selectedId)

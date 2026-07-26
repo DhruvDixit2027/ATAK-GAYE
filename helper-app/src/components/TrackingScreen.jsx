@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 
 import { BACKEND_URL } from "../config";
@@ -11,9 +11,12 @@ export default function TrackingScreen({ job, onComplete }) {
   const socketRef = useRef(null);
   const watchIdRef = useRef(null);
 
-  // 👇 Jab tak ye screen khuli hai (matlab helper job pe kaam kar
-  // raha hai), apni live location har position-change pe backend ko
-  // bhejte raho — customer ki TrackingScreen isi se turant update hoti hai
+  // 👇 NAYA: OTP input UI ke liye state
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [error, setError] = useState("");
+
   useEffect(() => {
     if (!job._id) {
       console.warn('job._id missing — location broadcast nahi ho payegi');
@@ -45,6 +48,38 @@ export default function TrackingScreen({ job, onComplete }) {
     };
   }, [job._id]);
 
+  // 👇 NAYA: Customer se liya OTP backend ko bhejta hai verify karne ke liye
+  const handleVerifyOtp = async () => {
+    if (!otp.trim()) {
+      setError("OTP daalo pehle");
+      return;
+    }
+    setVerifying(true);
+    setError("");
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/requests/${job._id}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "OTP galat hai, dubara try karo");
+        setVerifying(false);
+        return;
+      }
+
+      // OTP sahi tha — job complete ho gayi
+      onComplete();
+    } catch (err) {
+      console.error("OTP verify karne mein error:", err);
+      setError("Backend se connect nahi ho paya");
+      setVerifying(false);
+    }
+  };
+
   return (
     <div className="tracking-screen">
       <div className="tracking-card">
@@ -57,7 +92,45 @@ export default function TrackingScreen({ job, onComplete }) {
           🧭 Navigate on Google Maps
         </a>
 
-        <button className="complete-btn" onClick={onComplete}>Mark Job Complete</button>
+        {/* 👇 NAYA: OTP input, sirf tab dikhta hai jab "Mark Job Complete" dabaya ho */}
+        {!showOtpInput ? (
+          <button className="complete-btn" onClick={() => setShowOtpInput(true)}>
+            Mark Job Complete
+          </button>
+        ) : (
+          <div style={{ marginTop: "16px" }}>
+            <p style={{ fontSize: "13px", marginBottom: "8px" }}>
+              Customer se OTP maango aur yahan daalo:
+            </p>
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="4-digit OTP"
+              maxLength={4}
+              style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: "10px",
+                border: "1px solid #ccc",
+                fontSize: "18px",
+                letterSpacing: "4px",
+                textAlign: "center",
+                marginBottom: "10px",
+              }}
+            />
+            {error && (
+              <p style={{ color: "red", fontSize: "12px", marginBottom: "10px" }}>{error}</p>
+            )}
+            <button
+              className="complete-btn"
+              onClick={handleVerifyOtp}
+              disabled={verifying}
+            >
+              {verifying ? "Verify ho raha hai..." : "OTP Verify Karo"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

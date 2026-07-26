@@ -3,7 +3,7 @@ import { Phone, ShieldCheck, ArrowLeft, RotateCw, WifiOff } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import LoginIllustration from "./LoginIllustration";
 
-const BACKEND_URL = "https://atak-gaye.onrender.com";
+const BACKEND_URL = "http://localhost:5000";
 const REQUEST_TIMEOUT_MS = 25000; // 25 sec se zyada wait nahi karenge
 
 async function fetchWithTimeout(url, options) {

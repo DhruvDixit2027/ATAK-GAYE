@@ -1,10 +1,51 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ArrowLeft, MapPin, CheckCircle2 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { ISSUES } from "../data/helperPool";
+import { getAddressFromCoords } from "../utils";
 
 export default function IssueSelectScreen() {
-  const { goTo, selectedIssue, setSelectedIssue } = useApp();
+  const { goTo, selectedIssue, setSelectedIssue, liveLocation, locationError } = useApp();
+
+  const [locationLabel, setLocationLabel] = useState("Getting your location...");
+  const lastGeocodedRef = useRef(null);
+
+  useEffect(() => {
+    if (locationError) {
+      setLocationLabel("Location unavailable");
+      return;
+    }
+    if (!liveLocation) return;
+
+    // ~300m se kam move hua ho to dubara reverse-geocode mat karo
+    const last = lastGeocodedRef.current;
+    if (last) {
+      const dLat = liveLocation.lat - last.lat;
+      const dLng = liveLocation.lng - last.lng;
+      const roughMeters = Math.sqrt(dLat ** 2 + dLng ** 2) * 111000;
+      if (roughMeters < 300) return;
+    }
+
+    let cancelled = false;
+
+    async function loadAddress() {
+      try {
+        const address = await getAddressFromCoords(liveLocation.lat, liveLocation.lng);
+        if (cancelled) return;
+
+        lastGeocodedRef.current = { lat: liveLocation.lat, lng: liveLocation.lng };
+        const short = address.split(",").slice(0, 2).join(",").trim();
+        setLocationLabel(short || "Current Location");
+      } catch {
+        if (!cancelled) setLocationLabel("Location unavailable");
+      }
+    }
+
+    loadAddress();
+    return () => {
+      cancelled = true;
+    };
+  }, [liveLocation, locationError]);
 
   return (
     <div className="absolute inset-0 bg-slate-50 flex flex-col overflow-hidden">
@@ -86,7 +127,7 @@ export default function IssueSelectScreen() {
             >
               <MapPin size={15} className="text-orange-500 shrink-0" />
               <span className="text-xs font-semibold text-slate-700 truncate">
-                NH-27 Bypass, Lucknow
+                {locationLabel}
               </span>
             </div>
           </div>

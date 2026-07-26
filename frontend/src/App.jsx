@@ -48,9 +48,7 @@ export default function App() {
   // App khulte hi backend ko "jagane" ka ping — Render free tier
   // 15 min inactivity ke baad sleep ho jaata hai, isse jab tak
   // user phone number type kare, server ready ho chuka hota hai.
-  useEffect(() => {
-    fetch("https://atak-gaye.onrender.com").catch(() => {});
-  }, []);
+
 
   return (
     <AppProvider>
