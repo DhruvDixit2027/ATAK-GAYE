@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-const BACKEND_URL = 'https://atak-gaye.onrender.com';
+import { BACKEND_URL } from "../config";
 const ISSUE_ICONS = { petrol: '⛽', mechanic: '🔧', tyre: '🛞', battery: '🔋', tow: '🚛' };
 
 export default function TrackingScreen({ job, onComplete }) {

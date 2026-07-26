@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
+import { BACKEND_URL as API_BASE } from "../config";
 import './HelperLogin.css';
-
-const API_BASE = 'http://10.177.130.146:5000';
-
+import { BACKEND_URL } from "../config";
 export default function HelperLogin({ onExistingHelper, onNewHelper }) {
   const [phone, setPhone] = useState('');
   const [focused, setFocused] = useState(false);

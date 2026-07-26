@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, Star, MapPin, CheckCircle2, Bot } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import { BACKEND_URL } from "../config";
 import { getCurrentLocation, getAddressFromCoords } from "../utils";
 
 export default function AIMatchingScreen() {
@@ -41,8 +42,7 @@ export default function AIMatchingScreen() {
         }
 
         setStatusText("Nearby helpers scan ho rahe hain...");
-
-        const res = await fetch("https://atak-gaye.onrender.com/api/match", {
+        const res = await fetch(`${BACKEND_URL}/api/match`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -110,7 +110,7 @@ export default function AIMatchingScreen() {
     if (!chosenData) return;
 
     try {
-      const res = await fetch("https://atak-gaye.onrender.com/api/requests/create", {
+      const res = await fetch(`${BACKEND_URL}/api/requests/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

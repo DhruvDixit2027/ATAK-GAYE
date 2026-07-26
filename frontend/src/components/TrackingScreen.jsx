@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { useApp } from "../context/AppContext";
-
-const BACKEND_URL = "https://atak-gaye.onrender.com";
+import { BACKEND_URL } from "../config";
 
 const PATH = [
   [120, 150],
