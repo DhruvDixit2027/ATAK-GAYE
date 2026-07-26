@@ -1,0 +1,250 @@
+.details-screen {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: #0d0d0d;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Segoe UI', sans-serif;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.details-bg-mascot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  z-index: 0;
+  animation: floatMascot 6s ease-in-out infinite;
+}
+
+@keyframes floatMascot {
+  0%   { transform: scale(1) translateY(0px); }
+  50%  { transform: scale(1.03) translateY(-6px); }
+  100% { transform: scale(1) translateY(0px); }
+}
+
+.details-bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(13, 13, 13, 0.35) 0%,
+    rgba(13, 13, 13, 0.55) 40%,
+    rgba(13, 13, 13, 0.92) 75%,
+    #0d0d0d 100%
+  );
+  z-index: 1;
+}
+
+.details-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  padding: 36px 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.details-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.details-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #FF6A3D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 8px 24px rgba(255, 106, 61, 0.45);
+  margin-bottom: 14px;
+}
+
+.details-title {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 6px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.details-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+  max-width: 320px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+
+.details-card {
+  margin-top: auto;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 20px;
+  padding: 20px 18px;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.4);
+}
+
+.details-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.field-row .field-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.field-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.field-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23ffffff' stroke-width='2' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 34px;
+  cursor: pointer;
+}
+
+.field-select option {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.field-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: #FF6A3D;
+}
+
+.skills-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.skills-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-chip {
+  padding: 9px 16px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.skill-chip.active {
+  border-color: #FF6A3D;
+  background: rgba(255, 106, 61, 0.35);
+  color: #fff;
+}
+
+.skill-chip:active {
+  transform: scale(0.96);
+}
+
+.details-error {
+  color: #ffb3b3;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(255, 107, 107, 0.15);
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.details-footer {
+  position: relative;
+  z-index: 2;
+  padding: 16px 20px 20px;
+  background: #0d0d0d;
+  box-sizing: border-box;
+}
+
+.details-submit-btn {
+  width: 100%;
+  padding: 15px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 800;
+  font-size: 15px;
+  color: #171009;
+  background: linear-gradient(90deg, #FF6A3D, #FF8C00);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.details-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.details-submit-btn:active {
+  transform: scale(0.98);
+}

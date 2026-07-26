@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import HelperHome from './components/HelperHome';
+import HelperLogin from './components/HelperLogin';
 import HelperDetailsScreen from './components/HelperDetailsScreen';
 import TrackingScreen from './components/TrackingScreen';
 import './App.css';
@@ -17,7 +18,9 @@ export default function App() {
     }
   });
 
-  const [activeJob, setActiveJob] = useState(null); // ← YE LINE MISSING THI
+  const [authStep, setAuthStep] = useState("login"); // "login" | "register"
+  const [pendingPhone, setPendingPhone] = useState("");
+  const [activeJob, setActiveJob] = useState(null);
 
   const handleRegistered = (helperData) => {
     localStorage.setItem("atakGayeHelper", JSON.stringify(helperData));
@@ -27,10 +30,23 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem("atakGayeHelper");
     setHelper(null);
+    setAuthStep("login");
+    setPendingPhone("");
   };
 
   if (!helper) {
-    return <HelperDetailsScreen onRegistered={handleRegistered} />;
+    if (authStep === "register") {
+      return <HelperDetailsScreen onRegistered={handleRegistered} initialPhone={pendingPhone} />;
+    }
+    return (
+      <HelperLogin
+        onExistingHelper={(helperData) => setHelper(helperData)}
+        onNewHelper={(phone) => {
+          setPendingPhone(phone);
+          setAuthStep("register");
+        }}
+      />
+    );
   }
 
   if (activeJob) {
