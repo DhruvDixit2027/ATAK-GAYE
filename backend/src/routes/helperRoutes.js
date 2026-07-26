@@ -31,6 +31,20 @@ router.post('/create', async (req, res) => {
   }
 });
 
+// GET /api/helpers/by-phone/:phone — Helper Login ke liye:
+// check karta hai ki is phone se koi helper pehle se registered hai ya nahi
+router.get('/by-phone/:phone', async (req, res) => {
+  try {
+    const helper = await Helper.findOne({ phone: req.params.phone });
+    if (!helper) {
+      return res.status(404).json({ error: 'Is phone se koi helper registered nahi hai' });
+    }
+    res.json(helper);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Helper apni availability (online/offline) toggle kar sake
 router.post('/:helperId/availability', async (req, res) => {
   try {
@@ -45,6 +59,7 @@ router.post('/:helperId/availability', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 // PATCH /api/helpers/:helperId/location — helper apni live location update karega
 router.patch('/:helperId/location', async (req, res) => {
   try {
@@ -69,6 +84,7 @@ router.patch('/:helperId/location', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 // GET /api/helpers/:helperId — ek helper ki current details/location fetch karne ke liye
 router.get('/:helperId', async (req, res) => {
   try {
@@ -79,4 +95,5 @@ router.get('/:helperId', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 module.exports = router;
