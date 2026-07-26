@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BACKEND_URL } from "../config";
 
 export default function AcceptRejectButtons({ requestId, onAccept, onReject }) {
   const [loading, setLoading] = useState(false);
@@ -7,7 +8,7 @@ export default function AcceptRejectButtons({ requestId, onAccept, onReject }) {
   const handleAction = async (action) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://10.177.130.146:5000/api/requests/${requestId}/${action}`, {
+      const res = await fetch(`${BACKEND_URL}/api/requests/${requestId}/${action}`, {
         method: "POST",
       });
       if (!res.ok) throw new Error("Request failed");

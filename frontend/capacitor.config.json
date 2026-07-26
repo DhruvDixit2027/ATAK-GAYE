@@ -1,5 +1,17 @@
 {
   "appId": "com.atakgaye.app",
   "appName": "Atak Gaye",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "launchAutoHide": true,
+      "backgroundColor": "#FFF2E9",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    },
+    "CapacitorHttp": {
+      "enabled": false
+    }
+  }
 }

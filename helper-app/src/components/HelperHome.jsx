@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import RequestList from './RequestList';
+import { BACKEND_URL } from "../config";
 
 function HelperHome({ helper, onLogout, onJobAccepted }) {
 
@@ -12,7 +13,7 @@ function HelperHome({ helper, onLogout, onJobAccepted }) {
         async (position) => {
           const { latitude, longitude } = position.coords;
           try {
-            await fetch(`http://10.177.130.146:5000/api/helpers/${helper._id}/location`, {
+            await fetch(`${BACKEND_URL}/api/helpers/${helper._id}/location`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ lat: latitude, lng: longitude }),

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Request = require('../models/Request');
+const { emitRequestStatus } = require('../../sockets'); // 👈 NAYA: real-time status update ke liye
 
 router.get('/pending/:helperId', async (req, res) => {
   try {
@@ -21,6 +22,7 @@ router.post('/:requestId/accept', async (req, res) => {
       { status: 'accepted' },
       { new: true }
     );
+    emitRequestStatus(req.params.requestId, 'accepted'); // 👈 NAYA: customer ki tracking screen turant "Helper aa raha hai" pe switch hogi
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -34,6 +36,7 @@ router.post('/:requestId/reject', async (req, res) => {
       { status: 'rejected' },
       { new: true }
     );
+    emitRequestStatus(req.params.requestId, 'rejected'); // 👈 NAYA: customer ko turant pata chalega, alternate helper dhoondne ke liye
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });

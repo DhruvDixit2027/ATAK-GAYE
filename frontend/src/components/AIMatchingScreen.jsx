@@ -42,7 +42,7 @@ export default function AIMatchingScreen() {
 
         setStatusText("Nearby helpers scan ho rahe hain...");
 
-        const res = await fetch("http://localhost:5000/api/match", {
+        const res = await fetch("https://atak-gaye.onrender.com/api/match", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -110,7 +110,7 @@ export default function AIMatchingScreen() {
     if (!chosenData) return;
 
     try {
-      const res = await fetch("http://localhost:5000/api/requests/create", {
+      const res = await fetch("https://atak-gaye.onrender.com/api/requests/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

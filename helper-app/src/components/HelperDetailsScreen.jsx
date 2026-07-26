@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { BACKEND_URL } from "../config";
 
 const SKILL_OPTIONS = [
   { value: "petrol", label: "Petrol" },
@@ -32,7 +33,7 @@ export default function HelperDetailsScreen({ onRegistered }) {
     setError("");
 
     try {
-      const res = await fetch("http://10.177.130.146:5000/api/helpers/create", {
+      const res = await fetch(`${BACKEND_URL}/api/helpers/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

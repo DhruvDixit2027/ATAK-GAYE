@@ -1,9 +1,20 @@
-import React, { useState } from "react";
-import { Phone, ShieldCheck, ArrowLeft } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Phone, ShieldCheck, ArrowLeft, RotateCw, WifiOff } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import LoginIllustration from "./LoginIllustration";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "https://atak-gaye.onrender.com";
+const REQUEST_TIMEOUT_MS = 25000; // 25 sec se zyada wait nahi karenge
+
+async function fetchWithTimeout(url, options) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export default function LoginScreen() {
   const { setUser, setVerifiedPhone } = useApp();
@@ -14,17 +25,32 @@ export default function LoginScreen() {
   const [devOtp, setDevOtp] = useState(""); // 👈 testing mode: OTP screen pe dikhane ke liye
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isNetworkError, setIsNetworkError] = useState(false);
+  const [slowServer, setSlowServer] = useState(false); // 👈 backend "jaag" raha hai to batane ke liye
+  const slowTimerRef = useRef(null);
+
+  const startSlowTimer = () => {
+    setSlowServer(false);
+    slowTimerRef.current = setTimeout(() => setSlowServer(true), 6000);
+  };
+  const stopSlowTimer = () => {
+    clearTimeout(slowTimerRef.current);
+    setSlowServer(false);
+  };
 
   const handleSendOtp = async () => {
     if (!phone.trim() || phone.trim().length < 6) {
       setError("Sahi phone number daalo");
+      setIsNetworkError(false);
       return;
     }
     setLoading(true);
     setError("");
+    setIsNetworkError(false);
+    startSlowTimer();
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/auth/send-otp`, {
+      const res = await fetchWithTimeout(`${BACKEND_URL}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: phone.trim() }),
@@ -36,29 +62,40 @@ export default function LoginScreen() {
       if (!res.ok) {
         setError((data && data.error) || `Kuch galat ho gaya (error ${res.status})`);
         setLoading(false);
+        stopSlowTimer();
         return;
       }
 
       setDevOtp(data.otp || ""); // testing mode ka OTP
       setStep("otp");
       setLoading(false);
+      stopSlowTimer();
     } catch (err) {
       console.error("OTP bhejne mein error:", err);
-      setError("Backend se connect nahi ho paya");
+      setError(
+        err.name === "AbortError"
+          ? "Server response nahi de raha, dubara try karo"
+          : "Network check karo aur dubara try karo"
+      );
+      setIsNetworkError(true);
       setLoading(false);
+      stopSlowTimer();
     }
   };
 
   const handleVerifyOtp = async () => {
     if (!otp.trim()) {
       setError("OTP daalo");
+      setIsNetworkError(false);
       return;
     }
     setLoading(true);
     setError("");
+    setIsNetworkError(false);
+    startSlowTimer();
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/auth/verify-otp`, {
+      const res = await fetchWithTimeout(`${BACKEND_URL}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: phone.trim(), otp: otp.trim() }),
@@ -70,6 +107,7 @@ export default function LoginScreen() {
       if (!res.ok) {
         setError((data && data.error) || `Kuch galat ho gaya (error ${res.status})`);
         setLoading(false);
+        stopSlowTimer();
         return;
       }
 
@@ -81,11 +119,23 @@ export default function LoginScreen() {
         setVerifiedPhone(phone.trim());
       }
       setLoading(false);
+      stopSlowTimer();
     } catch (err) {
       console.error("OTP verify karne mein error:", err);
-      setError("Backend se connect nahi ho paya");
+      setError(
+        err.name === "AbortError"
+          ? "Server response nahi de raha, dubara try karo"
+          : "Network check karo aur dubara try karo"
+      );
+      setIsNetworkError(true);
       setLoading(false);
+      stopSlowTimer();
     }
+  };
+
+  const handleRetry = () => {
+    if (step === "phone") handleSendOtp();
+    else handleVerifyOtp();
   };
 
   const handleBackToPhone = () => {
@@ -93,6 +143,7 @@ export default function LoginScreen() {
     setOtp("");
     setDevOtp("");
     setError("");
+    setIsNetworkError(false);
   };
 
   return (
@@ -167,8 +218,28 @@ export default function LoginScreen() {
             )}
           </div>
 
+          {loading && slowServer && (
+            <div className="flex items-center gap-2 text-[11px] text-orange-600 font-medium mt-3 ml-1">
+              <RotateCw size={12} className="animate-spin" />
+              Server jaag raha hai, thoda ruko...
+            </div>
+          )}
+
           {error && (
-            <div className="text-red-500 text-xs font-medium mt-3 ml-1">{error}</div>
+            <div className="flex items-center justify-between gap-2 mt-3 ml-1">
+              <div className="flex items-center gap-1.5 text-red-500 text-xs font-medium">
+                {isNetworkError && <WifiOff size={13} />}
+                {error}
+              </div>
+              {isNetworkError && (
+                <button
+                  onClick={handleRetry}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg"
+                >
+                  <RotateCw size={11} /> Dubara try karo
+                </button>
+              )}
+            </div>
           )}
 
           <button

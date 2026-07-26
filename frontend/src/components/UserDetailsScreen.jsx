@@ -3,7 +3,7 @@ import { ChevronLeft, User, Phone, Bike, Camera } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import BottomNav from "./BottomNav";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "https://atak-gaye.onrender.com";
 
 export default function UserDetailsScreen({ editMode = false }) {
   const { goTo, user, setUser, verifiedPhone } = useApp();

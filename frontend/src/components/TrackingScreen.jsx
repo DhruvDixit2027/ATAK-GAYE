@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import { io } from "socket.io-client";
 import { useApp } from "../context/AppContext";
+
+const BACKEND_URL = "https://atak-gaye.onrender.com";
 
 const PATH = [
   [120, 150],
@@ -55,92 +58,61 @@ export default function TrackingScreen() {
   const firstName = w.name.split(" ")[0];
 
   const [arrived, setArrived] = useState(false);
+  const [requestStatus, setRequestStatus] = useState(
+    currentRequestId ? "pending" : "accepted"
+  );
 
-  const [requestStatus, setRequestStatus] = useState("pending");
-  const pollRef = useRef(null);
-
-  // 👇 NAYA: real distance-based progress tracking
   const [progress, setProgress] = useState(0);
   const [liveDistanceKm, setLiveDistanceKm] = useState(w.distanceKm ?? null);
   const initialDistanceRef = useRef(w.distanceKm ?? null);
-  const locationPollRef = useRef(null);
+  const socketRef = useRef(null);
 
-  // Status polling — helper ne accept/reject kiya ya nahi
+  // 👇 NAYA: Socket.IO connection — status aur location dono isi se aayenge,
+  // koi polling nahi. Jaise hi helper move kare ya accept/reject kare,
+  // turant yahan pata chal jaata hai.
   useEffect(() => {
-    if (!currentRequestId) {
-      setRequestStatus("accepted");
-      return;
-    }
+    if (!currentRequestId) return;
 
-    const checkStatus = async () => {
-      try {
-        const res = await fetch(`http://localhost:5000/api/requests/${currentRequestId}`);
-        const data = await res.json();
+    const socket = io(BACKEND_URL, { transports: ["websocket"] });
+    socketRef.current = socket;
 
-        if (data.status === "accepted") {
-          setRequestStatus("accepted");
-          clearInterval(pollRef.current);
-        } else if (data.status === "rejected") {
-          setRequestStatus("rejected");
-          clearInterval(pollRef.current);
-        }
-      } catch (err) {
-        console.error("Status check karne mein error:", err);
+    socket.emit("join:request", currentRequestId);
+
+    socket.on("status:update", ({ status }) => {
+      setRequestStatus(status);
+    });
+
+    socket.on("location:update", ({ lat, lng }) => {
+      if (!user?.currentLocation) return;
+
+      const dist = getDistanceKm(
+        user.currentLocation.lat,
+        user.currentLocation.lng,
+        lat,
+        lng
+      );
+
+      setLiveDistanceKm(Number(dist.toFixed(1)));
+
+      if (initialDistanceRef.current == null || initialDistanceRef.current === 0) {
+        initialDistanceRef.current = dist || 0.1;
       }
-    };
 
-    checkStatus();
-    pollRef.current = setInterval(checkStatus, 3000);
+      const rawProgress = 1 - dist / initialDistanceRef.current;
+      setProgress(Math.max(0, Math.min(1, rawProgress)));
 
-    return () => clearInterval(pollRef.current);
-  }, [currentRequestId]);
-
-  // 👇 NAYA: Helper ki real location poll karo, jab tak accept ho chuka ho aur user location available ho
-  useEffect(() => {
-    if (requestStatus !== "accepted" || !w.id || !user?.currentLocation) return;
-
-    const pollLocation = async () => {
-      try {
-        const res = await fetch(`http://localhost:5000/api/helpers/${w.id}`);
-        const helper = await res.json();
-
-        if (!helper?.currentLocation) return;
-
-        const dist = getDistanceKm(
-          user.currentLocation.lat,
-          user.currentLocation.lng,
-          helper.currentLocation.lat,
-          helper.currentLocation.lng
-        );
-
-        setLiveDistanceKm(Number(dist.toFixed(1)));
-
-        // Agar initial distance record nahi hui thi, ab set kar do
-        if (initialDistanceRef.current == null || initialDistanceRef.current === 0) {
-          initialDistanceRef.current = dist || 0.1;
-        }
-
-        // Progress = kitna percent raasta cover ho chuka hai (0 = start, 1 = pahunch gaya)
-        const rawProgress = 1 - dist / initialDistanceRef.current;
-        setProgress(Math.max(0, Math.min(1, rawProgress)));
-
-        // ~50 meter ke andar aa jaaye to "arrived" maan lo
-        if (dist <= 0.05 && !arrived) {
-          setArrived(true);
-          showToast(`🟢 ${w.name} pahunch gaya hai — OTP share karein`);
-          setTimeout(() => goTo("done"), 1800);
-        }
-      } catch (err) {
-        console.error("Helper location fetch failed:", err);
+      if (dist <= 0.05 && !arrived) {
+        setArrived(true);
+        showToast(`🟢 ${w.name} pahunch gaya hai — OTP share karein`);
+        setTimeout(() => goTo("done"), 1800);
       }
+    });
+
+    return () => {
+      socket.disconnect();
     };
-
-    pollLocation();
-    locationPollRef.current = setInterval(pollLocation, 4000);
-
-    return () => clearInterval(locationPollRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requestStatus, w.id]);
+  }, [currentRequestId]);
 
   const [cx, cy] = getPointOnPath(progress);
   const etaText = arrived

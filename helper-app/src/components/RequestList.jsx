@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import RequestCard from './RequestCard';
+import { BACKEND_URL } from "../config";
 
 export default function RequestList({ helperId, onJobAccepted }) {
   const [requests, setRequests] = useState([]);
@@ -7,7 +8,7 @@ export default function RequestList({ helperId, onJobAccepted }) {
 
   const fetchRequests = async () => {
     try {
-      const res = await fetch(`http://10.177.130.146:5000/api/requests/pending/${helperId}`);
+      const res = await fetch(`${BACKEND_URL}/api/requests/pending/${helperId}`);
       const data = await res.json();
       setRequests(data);
       setError(null);
@@ -28,6 +29,8 @@ export default function RequestList({ helperId, onJobAccepted }) {
   };
 
   const handleAccept = (request) => {
+    // Note: AcceptRejectButtons.jsx already calls POST /api/requests/:id/accept
+    // before this fires — so no fetch needed here, just local state + navigation.
     removeRequest(request._id);
     onJobAccepted(request); // App.jsx ko batao — tracking screen khulegi
   };

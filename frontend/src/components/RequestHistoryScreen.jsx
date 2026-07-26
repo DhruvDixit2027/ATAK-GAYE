@@ -30,7 +30,7 @@ export default function RequestHistoryScreen() {
     async function fetchHistory() {
       if (!user?._id) return;
       try {
-        const res = await fetch(`http://localhost:5000/api/requests/user/${user._id}`);
+        const res = await fetch(`https://atak-gaye.onrender.com/api/requests/user/${user._id}`);
         const data = await res.json();
         setRequests(Array.isArray(data) ? data : []);
       } catch (err) {
