@@ -3,7 +3,7 @@ import { ChevronLeft, User, Phone, Bike, LogOut } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import BottomNav from "./BottomNav";
 
-const BACKEND_URL = "https://atak-gaye.onrender.com";
+const BACKEND_URL = "http://localhost:5000";
 
 // profilePhoto kabhi purana base64 string ho sakta hai, kabhi naya
 // "/uploads/xyz.jpg" relative path — dono cases handle karo

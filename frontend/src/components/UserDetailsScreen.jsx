@@ -3,21 +3,21 @@ import { ChevronLeft, User, Phone, Bike, Camera } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import BottomNav from "./BottomNav";
 
-const BACKEND_URL = "https://atak-gaye.onrender.com";
-
+const BACKEND_URL = "http://localhost:5000";
 export default function UserDetailsScreen({ editMode = false }) {
   const { goTo, user, setUser, verifiedPhone } = useApp();
   const [name, setName] = useState(editMode && user ? user.name : "");
-  // 👇 NAYA: agar login flow se aaye ho (OTP verify ho chuka), to phone
+  // 👇 agar login flow se aaye ho (OTP verify ho chuka), to phone
   // pehle se bhara hua aayega
   const [phone, setPhone] = useState(
     editMode && user ? user.phone : verifiedPhone || ""
   );
   const [vehicleType, setVehicleType] = useState(editMode && user ? user.vehicleType : "bike");
+  // 👇 BADLA: BACKEND_URL prefix hataya, Cloudinary already poora URL deta hai
   const [photoPreview, setPhotoPreview] = useState(
-    editMode && user && user.profilePhoto ? `${BACKEND_URL}${user.profilePhoto}` : null
+    editMode && user && user.profilePhoto ? user.profilePhoto : null
   );
-  const [photoFile, setPhotoFile] = useState(null); // 👈 NAYA: actual File object, upload ke liye
+  const [photoFile, setPhotoFile] = useState(null); // actual File object, upload ke liye
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -26,7 +26,8 @@ export default function UserDetailsScreen({ editMode = false }) {
       setName(user.name || "");
       setPhone(user.phone || "");
       setVehicleType(user.vehicleType || "bike");
-      setPhotoPreview(user.profilePhoto ? `${BACKEND_URL}${user.profilePhoto}` : null);
+      // 👇 BADLA: BACKEND_URL prefix hataya
+      setPhotoPreview(user.profilePhoto ? user.profilePhoto : null);
     }
   }, [editMode, user]);
 
@@ -40,7 +41,7 @@ export default function UserDetailsScreen({ editMode = false }) {
       return;
     }
 
-    setPhotoFile(file); // 👈 ye wala upload hoga, base64 nahi
+    setPhotoFile(file); // ye wala upload hoga
 
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -64,7 +65,6 @@ export default function UserDetailsScreen({ editMode = false }) {
         : `${BACKEND_URL}/api/users/create`;
       const method = editMode ? "PATCH" : "POST";
 
-      // 👇 NAYA: JSON.stringify ki jagah FormData — image ab base64 nahi, asli file jaati hai
       const formData = new FormData();
       formData.append("name", name);
       formData.append("phone", phone);
@@ -80,13 +80,8 @@ export default function UserDetailsScreen({ editMode = false }) {
       const res = await fetch(url, {
         method,
         body: formData,
-        // Content-Type header jaan-bujhke nahi laga rahe —
-        // browser khud sahi multipart boundary ke saath set karega
       });
 
-      // Response ka Content-Type check karo - agar JSON nahi hai
-      // (jaise server ka HTML error page) to seedha res.json() call
-      // karne se crash ho jaata hai
       const contentType = res.headers.get("content-type") || "";
       const isJson = contentType.includes("application/json");
       const data = isJson ? await res.json() : null;

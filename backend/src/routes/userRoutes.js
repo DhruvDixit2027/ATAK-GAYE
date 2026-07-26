@@ -19,7 +19,7 @@ router.post('/create', upload.single('profilePhoto'), async (req, res) => {
     let user = await User.findOne({ phone });
 
     if (!user) {
-      const profilePhoto = req.file ? `/uploads/${req.file.filename}` : null;
+      const profilePhoto = req.file ? req.file.path : null;   // 👈 BADLA: filename → path (Cloudinary poora URL deta hai)
       user = new User({ name, phone, vehicleType, currentLocation, profilePhoto });
       await user.save();
     }
@@ -43,7 +43,7 @@ router.patch('/:userId', upload.single('profilePhoto'), async (req, res) => {
 
     // Nayi photo upload hui hai to path update karo, warna purani wahi rehne do
     if (req.file) {
-      updateData.profilePhoto = `/uploads/${req.file.filename}`;
+      updateData.profilePhoto = req.file.path;   // 👈 BADLA: filename → path
     }
 
     const updated = await User.findByIdAndUpdate(
