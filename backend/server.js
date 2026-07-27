@@ -9,6 +9,7 @@ const matchRoutes = require('./src/routes/matchRoutes');
 const requestRoutes = require('./src/routes/requestRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const helperRoutes = require('./src/routes/helperRoutes');
+const paymentRoutes = require('./src/routes/paymentRoutes');
 const authRoutes = require('./src/routes/authRoutes');
 const { initSocket } = require('./sockets');
 
@@ -41,6 +42,7 @@ app.use('/api', matchRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/helpers', helperRoutes);
+app.use('/api/payment', paymentRoutes);
 app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 5000;

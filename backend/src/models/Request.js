@@ -45,6 +45,23 @@ const requestSchema = new mongoose.Schema({
     type: String,
     default: () => Math.floor(1000 + Math.random() * 9000).toString(),
   },
+  amount: {
+    type: Number,
+    default: null,
+  },
+  paymentId: {
+    type: String,
+    default: null,
+  },
+  orderId: {
+    type: String,
+    default: null,
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid', 'failed'],
+    default: 'pending',
+  },
   userRating: {
     type: Number,
     min: 1,
