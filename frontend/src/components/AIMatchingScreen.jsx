@@ -1,8 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Star, MapPin, CheckCircle2, Bot } from "lucide-react";
+import { ArrowLeft, Star, MapPin, CheckCircle2, Bot, IndianRupee } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { BACKEND_URL } from "../config";
 import { getAddressFromCoords } from "../utils";
+
+// 👇 NAYA: display ke liye price (backend bhi apni taraf se yahi price charge karega,
+// isliye ye sirf UI mein dikhane ke liye hai — asli security backend mein hai)
+const DISPLAY_PRICING = {
+  petrol: 100,
+  mechanic: 200,
+  tyre: 120,
+  battery: 150,
+  tow: 300,
+};
+
 export default function AIMatchingScreen() {
  const {
   goTo,
@@ -12,6 +23,7 @@ export default function AIMatchingScreen() {
   setUser,
   setCurrentRequestId,
   liveLocation,
+  showToast,
 } = useApp();
   const [candidates, setCandidates] = useState([]);
   const [revealedScores, setRevealedScores] = useState(false);
@@ -22,6 +34,11 @@ export default function AIMatchingScreen() {
   const [userAddress, setUserAddress] = useState(null);
 
   const [selectedId, setSelectedId] = useState(null);
+
+  // 👇 NAYA: payment ke waqt button disable/loading dikhane ke liye
+  const [paying, setPaying] = useState(false);
+
+  const price = DISPLAY_PRICING[selectedIssue] || 150;
 
   useEffect(() => {
     let scoreTimer;
@@ -113,14 +130,8 @@ try {
     setWinner(helper);
   };
 
-  const handleConfirmRequest = async () => {
-    if (!user || !user._id) {
-      console.error("User details missing, request create nahi ho sakti");
-      goTo("tracking");
-      return;
-    }
-    if (!chosenData) return;
-
+  // 👇 NAYA: request ko backend mein create karta hai — payment details ke saath
+  const createRequestInBackend = async (paymentInfo) => {
     try {
       const res = await fetch(`${BACKEND_URL}/api/requests/create`, {
         method: "POST",
@@ -132,6 +143,10 @@ try {
           userLocation: userLocation || { lat: 26.4499, lng: 80.3319 },
           matchScore: chosenData.matchPercent,
           estimatedArrivalMin: chosenData.etaMin,
+          amount: paymentInfo.amount,
+          paymentId: paymentInfo.paymentId,
+          orderId: paymentInfo.orderId,
+          paymentStatus: "paid",
         }),
       });
       const data = await res.json();
@@ -141,6 +156,93 @@ try {
     } catch (err) {
       console.error("Request create karne mein error:", err);
       goTo("tracking");
+    }
+  };
+
+  // 👇 BADLA: ab pehle payment hoga, tabhi request create hogi
+  const handleConfirmRequest = async () => {
+    if (!user || !user._id) {
+      console.error("User details missing, request create nahi ho sakti");
+      goTo("tracking");
+      return;
+    }
+    if (!chosenData) return;
+
+    setPaying(true);
+
+    try {
+      // Step 1: Backend se Razorpay order banwao
+      const orderRes = await fetch(`${BACKEND_URL}/api/payment/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ issueType: selectedIssue || "mechanic" }),
+      });
+      const orderData = await orderRes.json();
+
+      if (!orderData.orderId) {
+        showToast("Payment order banane mein error hua");
+        setPaying(false);
+        return;
+      }
+
+      // Step 2: Razorpay Checkout popup kholo
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Atak Gaye",
+        description: `${selectedIssue || "Service"} - ${chosenData.name}`,
+        order_id: orderData.orderId,
+        handler: async function (response) {
+          // Step 3: Payment ke baad backend se verify karwao
+          try {
+            const verifyRes = await fetch(`${BACKEND_URL}/api/payment/verify`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+
+            if (verifyData.verified) {
+              showToast("✅ Payment successful!");
+              await createRequestInBackend({
+                amount: orderData.amount / 100,
+                paymentId: response.razorpay_payment_id,
+                orderId: response.razorpay_order_id,
+              });
+            } else {
+              showToast("❌ Payment verify nahi ho paya");
+            }
+          } catch (err) {
+            console.error("Verify error:", err);
+            showToast("Payment verify karne mein error hua");
+          } finally {
+            setPaying(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setPaying(false);
+            showToast("Payment cancel kar diya gaya");
+          },
+        },
+        prefill: {
+          name: user?.name || "",
+          contact: user?.phone || "",
+        },
+        theme: { color: "#FF6A3D" },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error("Payment initiate karne mein error:", err);
+      showToast("Payment shuru nahi ho paya");
+      setPaying(false);
     }
   };
 
@@ -384,6 +486,15 @@ try {
                   AI Confidence: {chosenData.matchPercent}%
                 </div>
               </div>
+
+              {/* 👇 NAYA: Price card */}
+              <div className="mt-4 flex items-center justify-between bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <IndianRupee size={16} className="text-orange-500" />
+                  Service Charge
+                </div>
+                <div className="text-xl font-black text-orange-600">₹{price}</div>
+              </div>
             </div>
           )}
         </div>
@@ -395,6 +506,7 @@ try {
           <div className="max-w-md mx-auto w-full">
             <button
               onClick={handleConfirmRequest}
+              disabled={paying}
               className="
               w-full
               py-3.5 sm:py-4
@@ -409,9 +521,10 @@ try {
               to-orange-600
               active:scale-95
               transition-all
+              disabled:opacity-60
             "
             >
-              Confirm karo, bhejo →
+              {paying ? "Payment ho raha hai..." : `Pay Now ₹${price} →`}
             </button>
           </div>
         </div>

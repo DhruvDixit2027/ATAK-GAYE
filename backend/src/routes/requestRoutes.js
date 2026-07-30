@@ -54,6 +54,10 @@ router.post('/create', async (req, res) => {
       matchScore,
       matchBreakdown,
       estimatedArrivalMin,
+      amount,
+      paymentId,
+      orderId,
+      paymentStatus,
     } = req.body;
 
     if (!userId) {
@@ -69,6 +73,10 @@ router.post('/create', async (req, res) => {
       matchScore,
       matchBreakdown,
       estimatedArrivalMin,
+      amount,
+      paymentId,
+      orderId,
+      paymentStatus,
     });
 
     await newRequest.save();
