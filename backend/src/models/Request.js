@@ -11,6 +11,16 @@ const requestSchema = new mongoose.Schema({
     ref: 'Helper',
     default: null, // null until AI assigns a helper
   },
+  // 👇 NAYA: Broadcast model ke liye — top 10 nearby helpers jinko request bheji gayi
+  candidateHelperIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Helper',
+  }],
+  // Jin helpers ne reject kiya — unki list se ye request hat jaati hai
+  rejectedBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Helper',
+  }],
   issueType: {
     type: String,
     enum: ['petrol', 'mechanic', 'tyre', 'battery', 'tow'],

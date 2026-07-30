@@ -145,13 +145,25 @@ export async function watchLocation(onUpdate, onError) {
     return () => {};
   }
 
+  // 👇 NAYA: bahut kharaab (1km+ off ho sakti) shuruaati readings ko chhodo
+  // jab tak koi behtar (<= 500m accuracy) reading na aa jaaye
+  let gotGoodFix = false;
+
   const watchId = navigator.geolocation.watchPosition(
     (position) => {
-      onUpdate({
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-      });
+      const { latitude, longitude, accuracy } = position.coords;
+
+      if (!gotGoodFix && accuracy > 500) {
+        console.warn(
+          `Location reading discarded — accuracy ${Math.round(
+            accuracy
+          )}m se zyada hai, behtar fix ka wait kar rahe hain`
+        );
+        return;
+      }
+      gotGoodFix = true;
+
+      onUpdate({ lat: latitude, lng: longitude, accuracy });
     },
     (error) => onError?.(error),
     {

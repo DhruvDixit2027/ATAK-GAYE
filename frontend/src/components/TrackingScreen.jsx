@@ -7,7 +7,6 @@ import "leaflet/dist/leaflet.css";
 import { useApp } from "../context/AppContext";
 import { BACKEND_URL } from "../config";
 
-// Leaflet default icon bundler issue fix
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -23,15 +22,16 @@ const userIcon = new L.Icon({
   popupAnchor: [1, -34],
 });
 
-const helperIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
+// 👇 NAYA: pin ki jagah ab scooter icon — direction ke hisaab se rotate hota hai
+function makeHelperIcon(bearingDeg = 0) {
+  return L.divIcon({
+    className: "helper-vehicle-icon",
+    html: `<div style="transform: rotate(${bearingDeg}deg); font-size:26px; line-height:1; filter: drop-shadow(0 2px 5px rgba(0,0,0,.35));">🛵</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+}
 
-// Helper move hone par map ko dono markers ke beech me fit karega
 function FitBounds({ userPos, helperPos }) {
   const map = useMap();
   useEffect(() => {
@@ -64,6 +64,18 @@ function getDistanceKm(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
+// 👇 NAYA: do points ke beech direction (bearing) nikaalta hai, icon rotate karne ke liye
+function getBearing(lat1, lng1, lat2, lng2) {
+  const toRad = (d) => (d * Math.PI) / 180;
+  const toDeg = (r) => (r * 180) / Math.PI;
+  const dLng = toRad(lng2 - lng1);
+  const y = Math.sin(dLng) * Math.cos(toRad(lat2));
+  const x =
+    Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLng);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
 export default function TrackingScreen() {
   const { goTo, winner, showToast, currentRequestId, user, liveLocation } = useApp();
   const w = winner || DEFAULT_WINNER;
@@ -76,9 +88,15 @@ export default function TrackingScreen() {
 
   const [requestDetails, setRequestDetails] = useState(null);
   const [liveDistanceKm, setLiveDistanceKm] = useState(w.distanceKm ?? null);
-  const [helperPos, setHelperPos] = useState(null); // [lat, lng]
+  const [helperPos, setHelperPos] = useState(null); // raw target position socket se
+  const [displayPos, setDisplayPos] = useState(null); // 👈 NAYA: animate hoke dikhne wali position
+  const [helperBearing, setHelperBearing] = useState(0); // 👈 NAYA: icon rotation
+
   const initialDistanceRef = useRef(w.distanceKm ?? null);
   const socketRef = useRef(null);
+  const prevHelperPosRef = useRef(null);
+  const displayPosRef = useRef(null);
+  const animFrameRef = useRef(null);
 
   const userPos = liveLocation
     ? [liveLocation.lat, liveLocation.lng]
@@ -109,20 +127,23 @@ export default function TrackingScreen() {
       setRequestStatus(status);
       if (status === "completed") {
         showToast(`✅ Job complete ho gaya!`);
-        setTimeout(() => goTo("done"), 1200);
+        setTimeout(() => goTo("payment"), 1200);
       }
     });
 
     socket.on("location:update", ({ lat, lng }) => {
+      // 👇 NAYA: bearing nikaalo purani position se, icon rotate karne ke liye
+      if (prevHelperPosRef.current) {
+        const [plat, plng] = prevHelperPosRef.current;
+        if (plat !== lat || plng !== lng) {
+          setHelperBearing(getBearing(plat, plng, lat, lng));
+        }
+      }
+      prevHelperPosRef.current = [lat, lng];
       setHelperPos([lat, lng]);
 
       if (!liveLocation) return;
-      const dist = getDistanceKm(
-        liveLocation.lat,
-        liveLocation.lng,
-        lat,
-        lng
-      );
+      const dist = getDistanceKm(liveLocation.lat, liveLocation.lng, lat, lng);
       setLiveDistanceKm(Number(dist.toFixed(1)));
 
       if (initialDistanceRef.current == null || initialDistanceRef.current === 0) {
@@ -138,6 +159,32 @@ export default function TrackingScreen() {
     return () => socket.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentRequestId]);
+
+  // 👇 NAYA: helperPos badalte hi icon ko smoothly glide karao (Blinkit jaisa), jump nahi
+  useEffect(() => {
+    if (!helperPos) return;
+
+    const from = displayPosRef.current || helperPos;
+    const to = helperPos;
+    const duration = 1000;
+    const start = performance.now();
+
+    cancelAnimationFrame(animFrameRef.current);
+
+    function step(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const lat = from[0] + (to[0] - from[0]) * t;
+      const lng = from[1] + (to[1] - from[1]) * t;
+      displayPosRef.current = [lat, lng];
+      setDisplayPos([lat, lng]);
+      if (t < 1) {
+        animFrameRef.current = requestAnimationFrame(step);
+      }
+    }
+    animFrameRef.current = requestAnimationFrame(step);
+
+    return () => cancelAnimationFrame(animFrameRef.current);
+  }, [helperPos]);
 
   const etaText = arrived
     ? 0
@@ -198,10 +245,34 @@ export default function TrackingScreen() {
         @keyframes dotPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.5); } 50% { box-shadow: 0 0 0 6px rgba(46,204,113,0); } }
         .dot-pulse { animation: dotPulse 1.6s ease-in-out infinite; }
         .leaflet-container { background: #e5e7eb; }
+        .helper-vehicle-icon { background: transparent; border: none; }
       `}</style>
 
-      {/* REAL MAP SECTION — fake SVG ki jagah ab yahan asli Leaflet + OpenStreetMap map hai */}
-      <div className="relative h-[240px] overflow-hidden bg-slate-200">
+      {/* 👇 NAYA: Blinkit-jaisa bold banner top pe */}
+      <div className="relative z-[1001] px-4 sm:px-5 pt-8 sm:pt-10 pb-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="text-xs font-bold uppercase tracking-wide opacity-90">
+            {arrived ? "Helper pahunch gaya" : "Madad aa rahi hai"}
+          </div>
+          <div
+            onClick={() => goTo("home")}
+            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+          >
+            <X size={15} />
+          </div>
+        </div>
+        <div className="text-2xl sm:text-3xl font-black mt-1">
+          {arrived ? "Aa gaya! 🎉" : `${etaText} min mein pahunchega`}
+        </div>
+        {liveDistanceKm != null && !arrived && (
+          <div className="text-xs font-semibold opacity-90 mt-1">
+            {liveDistanceKm} km door
+          </div>
+        )}
+      </div>
+
+      {/* Map — banner ke neeche thoda overlap karke rounded card jaisa */}
+      <div className="relative -mt-4 mx-3 rounded-3xl overflow-hidden shadow-xl h-[230px] shrink-0 z-[1000]">
         {userPos ? (
           <MapContainer
             center={userPos}
@@ -220,8 +291,8 @@ export default function TrackingScreen() {
               <Popup>Aap yahan hain</Popup>
             </Marker>
 
-            {helperPos && (
-              <Marker position={helperPos} icon={helperIcon}>
+            {displayPos && (
+              <Marker position={displayPos} icon={makeHelperIcon(helperBearing)}>
                 <Popup>{firstName} yahan hai</Popup>
               </Marker>
             )}
@@ -229,38 +300,22 @@ export default function TrackingScreen() {
             {userPos && helperPos && (
               <Polyline
                 positions={[helperPos, userPos]}
-                pathOptions={{ color: "#FF6A3D", weight: 4, dashArray: "6 8" }}
+                pathOptions={{ color: "#3B82F6", weight: 4 }}
               />
             )}
 
             <FitBounds userPos={userPos} helperPos={helperPos} />
           </MapContainer>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-sm text-slate-400">
+          <div className="w-full h-full flex items-center justify-center text-sm text-slate-400 bg-slate-100">
             Location la rahe hain...
           </div>
         )}
-
-        <div className="absolute top-3 left-3 right-14 bg-white px-3.5 py-2 rounded-2xl text-xs shadow-lg flex items-center gap-1.5 z-[1000] max-w-fit">
-          <Navigation2 size={14} className="text-orange-500 shrink-0" />
-          Pahunchne mein{" "}
-          <b className="text-orange-500 text-sm">{arrived ? "aa gaya!" : `${etaText} min`}</b>
-          {liveDistanceKm != null && !arrived && (
-            <span className="text-slate-400"> · {liveDistanceKm} km</span>
-          )}
-        </div>
-
-        <div
-          onClick={() => goTo("home")}
-          className="absolute top-3 right-3 w-9 h-9 rounded-xl bg-white shadow-lg flex items-center justify-center cursor-pointer active:scale-95 transition-transform z-[1000]"
-        >
-          <X size={16} className="text-slate-700" />
-        </div>
       </div>
 
       <div className="relative flex-1 overflow-y-auto pb-6">
         <div className="px-4 sm:px-5 max-w-md mx-auto w-full">
-          <div className="fade-in-up inline-flex items-center gap-1.5 text-[10.5px] font-bold text-green-700 bg-green-50 px-2.5 py-1 rounded-full mt-3 mb-3">
+          <div className="fade-in-up inline-flex items-center gap-1.5 text-[10.5px] font-bold text-green-700 bg-green-50 px-2.5 py-1 rounded-full mt-4 mb-3">
             🤖 AI ne is helper ko sabse best match chuna
           </div>
 

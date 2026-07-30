@@ -69,6 +69,7 @@ export default function HomeScreen() {
       return;
     }
     if (!liveLocation) return;
+    console.log("🔍 RAW GPS COORDS:", liveLocation.lat, liveLocation.lng, "| accuracy:", liveLocation.accuracy, "meters");
 
     // ~300m se kam move hua ho to dubara reverse-geocode mat karo
     // (Nominatim free API rate-limited hai, har GPS tick pe call nahi bhejna)

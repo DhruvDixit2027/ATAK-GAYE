@@ -8,7 +8,7 @@ function getMatchColor(score) {
   return '#ff4d4d';
 }
 
-export default function RequestCard({ request, onAccept, onReject }) {
+export default function RequestCard({ request, helperId, onAccept, onReject }) {
   const { issueType, userLocation, matchScore, estimatedArrivalMin, createdAt } = request;
   const timeAgo = Math.max(1, Math.round((Date.now() - new Date(createdAt)) / 60000));
   const matchColor = getMatchColor(matchScore);
@@ -36,6 +36,7 @@ export default function RequestCard({ request, onAccept, onReject }) {
 
       <AcceptRejectButtons
         requestId={request._id}
+        helperId={helperId}
         onAccept={() => onAccept(request)}
         onReject={() => onReject(request._id)}
       />

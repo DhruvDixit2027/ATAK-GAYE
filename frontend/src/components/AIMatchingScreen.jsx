@@ -4,7 +4,7 @@ import { useApp } from "../context/AppContext";
 import { BACKEND_URL } from "../config";
 import { getAddressFromCoords } from "../utils";
 
-// 👇 NAYA: display ke liye price (backend bhi apni taraf se yahi price charge karega,
+// 👇 display ke liye price (backend bhi apni taraf se yahi price charge karega,
 // isliye ye sirf UI mein dikhane ke liye hai — asli security backend mein hai)
 const DISPLAY_PRICING = {
   petrol: 100,
@@ -35,7 +35,6 @@ export default function AIMatchingScreen() {
 
   const [selectedId, setSelectedId] = useState(null);
 
-  // 👇 NAYA: payment ke waqt button disable/loading dikhane ke liye
   const [paying, setPaying] = useState(false);
 
   const price = DISPLAY_PRICING[selectedIssue] || 150;
@@ -130,15 +129,18 @@ try {
     setWinner(helper);
   };
 
-  // 👇 NAYA: request ko backend mein create karta hai — payment details ke saath
+  // 👇 BADLA: ab single helperId ki jagah top 10 candidates ki list backend ko jaati hai —
+  // backend saबको notification bhejega, jo pehle Accept dabaye usi ko job milega
   const createRequestInBackend = async (paymentInfo) => {
     try {
+      const candidateHelperIds = candidates.slice(0, 10).map((c) => c.id);
+
       const res = await fetch(`${BACKEND_URL}/api/requests/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user._id,
-          helperId: chosenData.id,
+          candidateHelperIds,   // 👈 top 10 nearby helpers, single helperId nahi
           issueType: selectedIssue || "mechanic",
           userLocation: userLocation || { lat: 26.4499, lng: 80.3319 },
           matchScore: chosenData.matchPercent,
@@ -158,94 +160,50 @@ try {
       goTo("tracking");
     }
   };
-
-  // 👇 BADLA: ab pehle payment hoga, tabhi request create hogi
   const handleConfirmRequest = async () => {
-    if (!user || !user._id) {
-      console.error("User details missing, request create nahi ho sakti");
-      goTo("tracking");
-      return;
-    }
-    if (!chosenData) return;
+  if (!user || !user._id) {
+    console.error("User details missing, request create nahi ho sakti");
+    goTo("tracking");
+    return;
+  }
+  if (!chosenData) return;
 
-    setPaying(true);
+  // 👇 NAYA: hardcoded fallback hata diya — real location zaroori hai
+  if (!userLocation) {
+    showToast("❌ Location nahi mili, thoda wait karke dubara try karo");
+    return;
+  }
 
-    try {
-      // Step 1: Backend se Razorpay order banwao
-      const orderRes = await fetch(`${BACKEND_URL}/api/payment/create-order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ issueType: selectedIssue || "mechanic" }),
-      });
-      const orderData = await orderRes.json();
+  setPaying(true);
 
-      if (!orderData.orderId) {
-        showToast("Payment order banane mein error hua");
-        setPaying(false);
-        return;
-      }
+  try {
+    const candidateHelperIds = candidates.slice(0, 10).map((c) => c.id);
 
-      // Step 2: Razorpay Checkout popup kholo
-      const options = {
-        key: orderData.keyId,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "Atak Gaye",
-        description: `${selectedIssue || "Service"} - ${chosenData.name}`,
-        order_id: orderData.orderId,
-        handler: async function (response) {
-          // Step 3: Payment ke baad backend se verify karwao
-          try {
-            const verifyRes = await fetch(`${BACKEND_URL}/api/payment/verify`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            });
-            const verifyData = await verifyRes.json();
-
-            if (verifyData.verified) {
-              showToast("✅ Payment successful!");
-              await createRequestInBackend({
-                amount: orderData.amount / 100,
-                paymentId: response.razorpay_payment_id,
-                orderId: response.razorpay_order_id,
-              });
-            } else {
-              showToast("❌ Payment verify nahi ho paya");
-            }
-          } catch (err) {
-            console.error("Verify error:", err);
-            showToast("Payment verify karne mein error hua");
-          } finally {
-            setPaying(false);
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            setPaying(false);
-            showToast("Payment cancel kar diya gaya");
-          },
-        },
-        prefill: {
-          name: user?.name || "",
-          contact: user?.phone || "",
-        },
-        theme: { color: "#FF6A3D" },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (err) {
-      console.error("Payment initiate karne mein error:", err);
-      showToast("Payment shuru nahi ho paya");
-      setPaying(false);
-    }
-  };
-
+    const res = await fetch(`${BACKEND_URL}/api/requests/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user._id,
+        candidateHelperIds,
+        issueType: selectedIssue || "mechanic",
+        userLocation,   // 👈 ab hamesha real location, koi fallback nahi
+        matchScore: chosenData.matchPercent,
+        estimatedArrivalMin: chosenData.etaMin,
+        amount: price,
+        paymentStatus: "pending",
+      }),
+    });
+    const data = await res.json();
+    console.log("Request created:", data);
+    setCurrentRequestId(data._id);
+    goTo("tracking");
+  } catch (err) {
+    console.error("Request create karne mein error:", err);
+    showToast("Request bhejne mein error hua, dobara try karein");
+  } finally {
+    setPaying(false);
+  }
+};
   const reasons = chosenData
     ? [
         { label: "Distance", pct: Math.round(chosenData.distScore * 100), sub: `${chosenData.distanceKm} km door` },
@@ -487,7 +445,6 @@ try {
                 </div>
               </div>
 
-              {/* 👇 NAYA: Price card */}
               <div className="mt-4 flex items-center justify-between bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3">
                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                   <IndianRupee size={16} className="text-orange-500" />
@@ -495,6 +452,9 @@ try {
                 </div>
                 <div className="text-xl font-black text-orange-600">₹{price}</div>
               </div>
+              <div className="text-[10.5px] text-slate-400 text-center mt-2">
+  💳 Payment job complete hone ke baad liya jaayega
+</div>
             </div>
           )}
         </div>
@@ -505,27 +465,12 @@ try {
         <div className="relative px-4 sm:px-5 pt-6 pb-6 sm:pb-8 bg-gradient-to-t from-slate-50 via-slate-50/85 to-transparent">
           <div className="max-w-md mx-auto w-full">
             <button
-              onClick={handleConfirmRequest}
-              disabled={paying}
-              className="
-              w-full
-              py-3.5 sm:py-4
-              rounded-2xl
-              font-bold
-              text-sm sm:text-base
-              text-white
-              tracking-wide
-              shadow-[0_20px_40px_rgba(249,115,22,.35)]
-              bg-gradient-to-r
-              from-orange-500
-              to-orange-600
-              active:scale-95
-              transition-all
-              disabled:opacity-60
-            "
-            >
-              {paying ? "Payment ho raha hai..." : `Pay Now ₹${price} →`}
-            </button>
+  onClick={handleConfirmRequest}
+  disabled={paying}
+  className="w-full py-3.5 sm:py-4 rounded-2xl font-bold text-sm sm:text-base text-white tracking-wide shadow-[0_20px_40px_rgba(249,115,22,.35)] bg-gradient-to-r from-orange-500 to-orange-600 active:scale-95 transition-all disabled:opacity-60"
+>
+  {paying ? "Bhej rahe hain..." : "Confirm karo, bhejo →"}
+</button>
           </div>
         </div>
       )}

@@ -41,7 +41,13 @@ export default function RequestList({ helperId, onJobAccepted }) {
   return (
     <div className="request-list">
       {requests.map((req) => (
-        <RequestCard key={req._id} request={req} onAccept={handleAccept} onReject={removeRequest} />
+        <RequestCard
+          key={req._id}
+          request={req}
+          helperId={helperId}
+          onAccept={handleAccept}
+          onReject={removeRequest}
+        />
       ))}
     </div>
   );

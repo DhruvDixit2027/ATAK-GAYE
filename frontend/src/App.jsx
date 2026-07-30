@@ -9,6 +9,7 @@ import UserDetailsScreen from "./components/UserDetailsScreen";
 import RequestHistoryScreen from "./components/RequestHistoryScreen";
 import ProfileScreen from "./components/ProfileScreen";
 import LoginScreen from "./components/LoginScreen"; // 👈 NAYA
+import PaymentScreen from "./components/PaymentScreen"; // 👈 NAYA
 
 function ScreenRouter() {
   const { screen, user, verifiedPhone } = useApp();
@@ -31,6 +32,9 @@ function ScreenRouter() {
       return <AIMatchingScreen />;
     case "tracking":
       return <TrackingScreen />;
+    case "payment":
+      return <PaymentScreen />;
+  
     case "done":
       return <DoneScreen />;
     case "requests":

@@ -12,6 +12,19 @@ body {
   background: #0b0d10;
   font-family: "Inter", sans-serif;
   margin: 0;
+  display: flex;
+  justify-content: center;
+}
+
+#root {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  height: 100vh;
+  margin: 0 auto;
+  background: #f8fafc;
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.4);
 }
 
 .no-scrollbar::-webkit-scrollbar {

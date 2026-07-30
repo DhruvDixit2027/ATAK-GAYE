@@ -1,17 +1,29 @@
 import React, { useState } from "react";
 import { CheckCircle2, Home } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import { BACKEND_URL } from "../config";   // 👈 NAYA
 
 export default function DoneScreen() {
-  const { goTo, winner, showToast } = useApp();
+  const { goTo, winner, showToast, currentRequestId, setCurrentRequestId, setWinner } = useApp();
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const name = winner?.name || "Helper";
+  const rate = async (n) => {
+  setRating(n);
+  showToast(`Dhanyawaad! Aapki rating save ho gayi ⭐${n}`);
 
-  const rate = (n) => {
-    setRating(n);
-    showToast(`Dhanyawaad! Aapki rating save ho gayi ⭐${n}`);
-  };
+  if (!currentRequestId) return;
+
+  try {
+    await fetch(`${BACKEND_URL}/api/requests/${currentRequestId}/rate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rating: n }),
+    });
+  } catch (err) {
+    console.error("Rating save karne mein error:", err);
+  }
+};
 
   return (
     <div className="absolute inset-0 bg-slate-50 flex flex-col items-center justify-center text-center px-8 py-10 overflow-hidden">
@@ -104,18 +116,21 @@ export default function DoneScreen() {
           </div>
         )}
       </div>
-
       <button
-        onClick={() => goTo("home")}
-        className="text-in w-full max-w-xs mt-6 py-3.5 rounded-2xl font-bold text-sm sm:text-base text-white shadow-xl active:scale-95 transition-transform flex items-center justify-center gap-2"
-        style={{
-          background: "linear-gradient(135deg, #FF6A3D, #ff8a5c)",
-          animationDelay: "0.65s",
-        }}
-      >
-        <Home size={18} />
-        Home par jao
-      </button>
+  onClick={() => {
+    setCurrentRequestId(null);
+    setWinner(null);
+    goTo("home");
+  }}
+  className="text-in w-full max-w-xs mt-6 py-3.5 rounded-2xl font-bold text-sm sm:text-base text-white shadow-xl active:scale-95 transition-transform flex items-center justify-center gap-2"
+  style={{
+    background: "linear-gradient(135deg, #FF6A3D, #ff8a5c)",
+    animationDelay: "0.65s",
+  }}
+>
+  <Home size={18} />
+  Home par jao
+</button>
     </div>
   );
 }
