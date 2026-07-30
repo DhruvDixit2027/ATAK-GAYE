@@ -1,2 +1,2 @@
-//export const BACKEND_URL = "http://localhost:5000";
-export const BACKEND_URL = "http://10.212.85.228:5000";
+export const API_URL = "http://localhost:5000";
+export const BACKEND_URL = API_URL; // alias for compatibility

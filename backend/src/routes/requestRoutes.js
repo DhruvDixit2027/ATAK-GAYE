@@ -127,7 +127,33 @@ router.post('/create', async (req, res) => {
   }
 });
 
+// GET /user/:userId — us user ki saari requests (history ke liye)
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const requests = await Request.find({ userId: req.params.userId })
+      .populate('helperId', 'name vehicleType vehicleNumber rating')
+      .sort({ createdAt: -1 });
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 👇 NAYA: GET /helper/:helperId — us helper ki saari requests (Helper History tab ke liye)
+router.get('/helper/:helperId', async (req, res) => {
+  try {
+    const requests = await Request.find({ helperId: req.params.helperId })
+      .populate('userId', 'name phone')
+      .sort({ createdAt: -1 });
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Ek specific request ka current status check karne ke liye
+// ⚠️ Ye route hamesha /user/:userId aur /helper/:helperId ke NEECHE hona chahiye,
+// warna Express in dono ko bhi galti se ":requestId" samajh lega
 router.get('/:requestId', async (req, res) => {
   try {
     const request = await Request.findById(req.params.requestId)
@@ -164,17 +190,6 @@ router.post('/:requestId/complete', async (req, res) => {
   }
 });
 
-// GET /user/:userId — us user ki saari requests (history ke liye)
-router.get('/user/:userId', async (req, res) => {
-  try {
-    const requests = await Request.find({ userId: req.params.userId })
-      .populate('helperId', 'name vehicleType vehicleNumber rating')
-      .sort({ createdAt: -1 });
-    res.json(requests);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 // POST /:requestId/pay — job complete hone ke baad payment verify karke request update karta hai
 // Signature yahi backend par verify hoti hai — client ke "paid" claim par bharosa nahi karte
 router.post('/:requestId/pay', async (req, res) => {
@@ -216,6 +231,7 @@ router.post('/:requestId/pay', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 // POST /:requestId/rate — user helper ko rating deta hai
 router.post('/:requestId/rate', async (req, res) => {
   try {
@@ -240,4 +256,5 @@ router.post('/:requestId/rate', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 module.exports = router;

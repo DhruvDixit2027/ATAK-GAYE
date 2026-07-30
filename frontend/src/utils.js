@@ -145,13 +145,33 @@ export async function watchLocation(onUpdate, onError) {
     return () => {};
   }
 
-  // 👇 NAYA: bahut kharaab (1km+ off ho sakti) shuruaati readings ko chhodo
-  // jab tak koi behtar (<= 500m accuracy) reading na aa jaaye
+  // 👇 Bahut kharaab (1km+ off ho sakti) shuruaati readings ko chhodo
+  // jab tak koi behtar (<= 500m accuracy) reading na aa jaaye.
+  //
+  // NAYA: agar 500m se behtar reading kabhi na mile (jaise laptop pe
+  // indoor testing karte waqt — WiFi-based location kai baar 500m se
+  // kharab hi rehti hai), to hum hamesha ke liye stuck nahi rehte.
+  // 15 second ke baad jo bhi best reading mili ho, usi se aage badh
+  // jaate hain — bilkul getCurrentLocation() ke max-wait fallback
+  // jaisa.
   let gotGoodFix = false;
+  let bestReading = null;
+
+  const fallbackTimer = setTimeout(() => {
+    if (!gotGoodFix && bestReading) {
+      gotGoodFix = true;
+      onUpdate(bestReading);
+    }
+  }, 15000);
 
   const watchId = navigator.geolocation.watchPosition(
     (position) => {
       const { latitude, longitude, accuracy } = position.coords;
+      const reading = { lat: latitude, lng: longitude, accuracy };
+
+      if (!bestReading || accuracy < bestReading.accuracy) {
+        bestReading = reading;
+      }
 
       if (!gotGoodFix && accuracy > 500) {
         console.warn(
@@ -163,7 +183,7 @@ export async function watchLocation(onUpdate, onError) {
       }
       gotGoodFix = true;
 
-      onUpdate({ lat: latitude, lng: longitude, accuracy });
+      onUpdate(reading);
     },
     (error) => onError?.(error),
     {
@@ -173,7 +193,10 @@ export async function watchLocation(onUpdate, onError) {
     }
   );
 
-  return () => navigator.geolocation.clearWatch(watchId);
+  return () => {
+    clearTimeout(fallbackTimer);
+    navigator.geolocation.clearWatch(watchId);
+  };
 }
 
 // Coordinates se readable address nikalta hai (reverse geocoding)
