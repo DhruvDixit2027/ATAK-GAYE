@@ -1,0 +1,184 @@
+/* TrackingScreen.css */
+
+.tracking-screen {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Video background - same pattern as login/home page */
+.tracking-video-bg {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.tracking-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.45) 0%,
+    rgba(0, 0, 0, 0.25) 45%,
+    rgba(0, 0, 0, 0.75) 100%
+  );
+  z-index: 1;
+}
+
+/* Glass card - same look as login-card */
+.tracking-card {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  text-align: center;
+  max-width: 340px;
+}
+
+.tracking-icon {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.tracking-card h2 {
+  color: #fff !important;
+  font-size: 15px;
+  font-weight: 800 !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  margin: 4px 0 6px;
+}
+
+.tracking-sub {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-size: 11px;
+  font-weight: 600 !important;
+  margin: 0 0 2px;
+}
+
+.tracking-coords {
+  color: #fff !important;
+  font-size: 12px;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  margin: 0 0 4px;
+}
+
+/* Truck driving animation */
+.tracking-road-wrap {
+  position: relative;
+  width: 100%;
+  height: 40px;
+  margin: 8px 0 12px;
+  overflow: hidden;
+}
+
+.tracking-road-line {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    #ffb03a 0px,
+    #ffb03a 18px,
+    transparent 18px,
+    transparent 34px
+  );
+  background-size: 200% 100%;
+  animation: road-scroll 1.1s linear infinite;
+  border-radius: 2px;
+}
+
+.tracking-truck {
+  position: absolute;
+  bottom: 11px;
+  font-size: 20px;
+  line-height: 1;
+  animation: truck-drive 2.6s ease-in-out infinite, truck-bounce 0.5s ease-in-out infinite;
+  transform-origin: center bottom;
+  will-change: transform;
+}
+
+@keyframes truck-drive {
+  0%   { left: -8%; }
+  50%  { left: 78%; }
+  100% { left: -8%; }
+}
+
+@keyframes truck-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+@keyframes road-scroll {
+  from { background-position: 0 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* Buttons - bold text, matches continue-btn style */
+.navigate-btn {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #FF6A3D, #FF8C00);
+  color: #fff !important;
+  font-size: 13px;
+  font-weight: 800 !important;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.complete-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff !important;
+  font-size: 12px;
+  font-weight: 700 !important;
+  cursor: pointer;
+}
+
+.complete-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .tracking-truck,
+  .tracking-road-line {
+    animation: none;
+  }
+}

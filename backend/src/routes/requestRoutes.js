@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Request = require('../models/Request');
-const { emitRequestStatus } = require('../../sockets'); // 👈 NAYA: real-time status update ke liye
+const Helper = require('../models/Helper'); // NAYA: job count increment karne ke liye
+const { emitRequestStatus } = require('../../sockets');
 
 router.get('/pending/:helperId', async (req, res) => {
   try {
@@ -22,7 +23,7 @@ router.post('/:requestId/accept', async (req, res) => {
       { status: 'accepted' },
       { new: true }
     );
-    emitRequestStatus(req.params.requestId, 'accepted'); // 👈 NAYA: customer ki tracking screen turant "Helper aa raha hai" pe switch hogi
+    emitRequestStatus(req.params.requestId, 'accepted');
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -36,14 +37,13 @@ router.post('/:requestId/reject', async (req, res) => {
       { status: 'rejected' },
       { new: true }
     );
-    emitRequestStatus(req.params.requestId, 'rejected'); // 👈 NAYA: customer ko turant pata chalega, alternate helper dhoondne ke liye
+    emitRequestStatus(req.params.requestId, 'rejected');
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Create a new request (jab user AI matching ke baad "confirm" dabata hai)
 router.post('/create', async (req, res) => {
   try {
     const {
@@ -77,7 +77,7 @@ router.post('/create', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-// Ek specific request ka current status check karne ke liye (tracking screen isko poll karegi)
+
 router.get('/:requestId', async (req, res) => {
   try {
     const request = await Request.findById(req.params.requestId)
@@ -88,7 +88,7 @@ router.get('/:requestId', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-// GET /api/requests/user/:userId — us user ki saari requests (history ke liye)
+
 router.get('/user/:userId', async (req, res) => {
   try {
     const requests = await Request.find({ userId: req.params.userId })
@@ -99,7 +99,23 @@ router.get('/user/:userId', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-// Helper ye call karta hai jab customer se OTP lekar submit kare — job complete
+
+// NAYA: GET /api/requests/helper/:helperId — helper ki poori job history
+// (accepted, completed, rejected sab) — History tab isko use karega
+router.get('/helper/:helperId', async (req, res) => {
+  try {
+    const requests = await Request.find({
+      helperId: req.params.helperId,
+      status: { $in: ['accepted', 'in-progress', 'completed', 'rejected'] },
+    })
+      .populate('userId', 'name phone')
+      .sort({ createdAt: -1 });
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.post('/:requestId/complete', async (req, res) => {
   try {
     const { otp } = req.body;
@@ -116,7 +132,12 @@ router.post('/:requestId/complete', async (req, res) => {
     request.completedAt = new Date();
     await request.save();
 
-    emitRequestStatus(req.params.requestId, 'completed'); // customer ko turant pata chal jaayega
+    // NAYA: helper ke totalJobsCompleted counter ko +1 karo
+    if (request.helperId) {
+      await Helper.findByIdAndUpdate(request.helperId, { $inc: { totalJobsCompleted: 1 } });
+    }
+
+    emitRequestStatus(req.params.requestId, 'completed');
 
     res.json(request);
   } catch (err) {

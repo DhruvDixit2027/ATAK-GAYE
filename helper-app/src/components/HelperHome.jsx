@@ -1,9 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import RequestList from './RequestList';
+import HelperProfileTab from './HelperProfileTab';
+import HelperHistoryTab from './HelperHistoryTab';
 import { BACKEND_URL } from "../config";
 import './HelperHome.css';
-console.log("HELPERHOME RENDERED - TEST123");
+
 function HelperHome({ helper, onLogout, onJobAccepted }) {
+  const [activeTab, setActiveTab] = useState('home'); // 'home' | 'history' | 'profile'
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -45,48 +48,45 @@ function HelperHome({ helper, onLogout, onJobAccepted }) {
       <div className="home-video-overlay" />
 
       <div className="home-scroll">
-        <div className="profile-card">
-          <div className="profile-top">
-            <div className="profile-avatar">
-              {helper.name ? helper.name.charAt(0).toUpperCase() : "H"}
-            </div>
-            <div className="profile-main">
-              <h2>{helper.name}</h2>
-              <p className="profile-sub">{helper.vehicleType} • {helper.vehicleNumber}</p>
-            </div>
-            <span className={`status-pill ${helper.availability ? "online" : "offline"}`}>
-              {helper.availability ? "Available" : "Offline"}
-            </span>
+        {activeTab === 'home' && (
+          <div className="requests-section">
+            <h3>Naye Requests</h3>
+            <RequestList helperId={helper._id} onJobAccepted={onJobAccepted} />
           </div>
+        )}
 
-          <div className="stats-grid">
-            <div className="stat-box">
-              <span className="stat-value">⭐ {helper.rating}</span>
-              <span className="stat-label">Rating</span>
-            </div>
-            <div className="stat-box">
-              <span className="stat-value">{helper.totalJobsCompleted}</span>
-              <span className="stat-label">Jobs Done</span>
-            </div>
-            <div className="stat-box">
-              <span className="stat-value">{Math.round(helper.successRate * 100)}%</span>
-              <span className="stat-label">Success</span>
-            </div>
-          </div>
+        {activeTab === 'history' && (
+          <HelperHistoryTab helperId={helper._id} />
+        )}
 
-          <div className="skills-row">
-            {helper.skillTypes && helper.skillTypes.map((skill) => (
-              <span key={skill} className="skill-chip active">{skill}</span>
-            ))}
-          </div>
+        {activeTab === 'profile' && (
+          <HelperProfileTab helper={helper} onLogout={onLogout} />
+        )}
+      </div>
 
-          <button className="logout-btn" onClick={onLogout}>Switch Helper</button>
-        </div>
-
-        <div className="requests-section">
-          <h3>Naye Requests</h3>
-          <RequestList helperId={helper._id} onJobAccepted={onJobAccepted} />
-        </div>
+      {/* Bottom navigation bar */}
+      <div className="bottom-nav">
+        <button
+          className={`nav-btn ${activeTab === 'home' ? 'active' : ''}`}
+          onClick={() => setActiveTab('home')}
+        >
+          <span className="nav-icon">🏠</span>
+          <span className="nav-label">Home</span>
+        </button>
+        <button
+          className={`nav-btn ${activeTab === 'history' ? 'active' : ''}`}
+          onClick={() => setActiveTab('history')}
+        >
+          <span className="nav-icon">📋</span>
+          <span className="nav-label">History</span>
+        </button>
+        <button
+          className={`nav-btn ${activeTab === 'profile' ? 'active' : ''}`}
+          onClick={() => setActiveTab('profile')}
+        >
+          <span className="nav-icon">👤</span>
+          <span className="nav-label">Profile</span>
+        </button>
       </div>
     </div>
   );
