@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { io } from "socket.io-client";
 import { Phone, MessageCircle, X, Navigation2 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, ZoomControl, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useApp } from "../context/AppContext";
 import { BACKEND_URL } from "../config";
+import socket from "../socket";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -22,7 +22,7 @@ const userIcon = new L.Icon({
   popupAnchor: [1, -34],
 });
 
-// 👇 NAYA: pin ki jagah ab scooter icon — direction ke hisaab se rotate hota hai
+// Pin ki jagah ab scooter icon — direction ke hisaab se rotate hota hai
 function makeHelperIcon(bearingDeg = 0) {
   return L.divIcon({
     className: "helper-vehicle-icon",
@@ -64,7 +64,7 @@ function getDistanceKm(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
-// 👇 NAYA: do points ke beech direction (bearing) nikaalta hai, icon rotate karne ke liye
+// Do points ke beech direction (bearing) nikaalta hai, icon rotate karne ke liye
 function getBearing(lat1, lng1, lat2, lng2) {
   const toRad = (d) => (d * Math.PI) / 180;
   const toDeg = (r) => (r * 180) / Math.PI;
@@ -89,11 +89,10 @@ export default function TrackingScreen() {
   const [requestDetails, setRequestDetails] = useState(null);
   const [liveDistanceKm, setLiveDistanceKm] = useState(w.distanceKm ?? null);
   const [helperPos, setHelperPos] = useState(null); // raw target position socket se
-  const [displayPos, setDisplayPos] = useState(null); // 👈 NAYA: animate hoke dikhne wali position
-  const [helperBearing, setHelperBearing] = useState(0); // 👈 NAYA: icon rotation
+  const [displayPos, setDisplayPos] = useState(null); // animate hoke dikhne wali position
+  const [helperBearing, setHelperBearing] = useState(0); // icon rotation
 
   const initialDistanceRef = useRef(w.distanceKm ?? null);
-  const socketRef = useRef(null);
   const prevHelperPosRef = useRef(null);
   const displayPosRef = useRef(null);
   const animFrameRef = useRef(null);
@@ -116,23 +115,23 @@ export default function TrackingScreen() {
     fetchDetails();
   }, [currentRequestId]);
 
+  // Shared socket use karte hain — naya connection nahi banate, isliye
+  // StrictMode ke double-mount pe koi "closed before established" warning nahi aati
   useEffect(() => {
     if (!currentRequestId) return;
 
-    const socket = io(BACKEND_URL, { transports: ["websocket"] });
-    socketRef.current = socket;
     socket.emit("join:request", currentRequestId);
 
-    socket.on("status:update", ({ status }) => {
+    const handleStatusUpdate = ({ status }) => {
       setRequestStatus(status);
       if (status === "completed") {
         showToast(`✅ Job complete ho gaya!`);
         setTimeout(() => goTo("payment"), 1200);
       }
-    });
+    };
 
-    socket.on("location:update", ({ lat, lng }) => {
-      // 👇 NAYA: bearing nikaalo purani position se, icon rotate karne ke liye
+    const handleLocationUpdate = ({ lat, lng }) => {
+      // Bearing nikaalo purani position se, icon rotate karne ke liye
       if (prevHelperPosRef.current) {
         const [plat, plng] = prevHelperPosRef.current;
         if (plat !== lat || plng !== lng) {
@@ -154,13 +153,21 @@ export default function TrackingScreen() {
         setArrived(true);
         showToast(`🟢 ${w.name} pahunch gaya hai — OTP share karein`);
       }
-    });
+    };
 
-    return () => socket.disconnect();
+    socket.on("status:update", handleStatusUpdate);
+    socket.on("location:update", handleLocationUpdate);
+
+    // Sirf listeners hataye — shared socket ko disconnect nahi karte,
+    // taaki dusri screens bhi usi connection ko use kar sakein
+    return () => {
+      socket.off("status:update", handleStatusUpdate);
+      socket.off("location:update", handleLocationUpdate);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentRequestId]);
 
-  // 👇 NAYA: helperPos badalte hi icon ko smoothly glide karao (Blinkit jaisa), jump nahi
+  // helperPos badalte hi icon ko smoothly glide karao (Blinkit jaisa), jump nahi
   useEffect(() => {
     if (!helperPos) return;
 
@@ -248,7 +255,7 @@ export default function TrackingScreen() {
         .helper-vehicle-icon { background: transparent; border: none; }
       `}</style>
 
-      {/* 👇 NAYA: Blinkit-jaisa bold banner top pe */}
+      {/* Blinkit-jaisa bold banner top pe */}
       <div className="relative z-[1001] px-4 sm:px-5 pt-8 sm:pt-10 pb-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white shrink-0">
         <div className="flex items-center justify-between">
           <div className="text-xs font-bold uppercase tracking-wide opacity-90">
