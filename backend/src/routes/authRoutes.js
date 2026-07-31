@@ -1,16 +1,21 @@
 const express = require('express');
 const router = express.Router();
+const axios = require('axios');
 const User = require('../models/User');
 
-// TESTING MODE: OTP yahan memory mein store ho raha hai (server restart hone
-// pe clear ho jaayega). Real SMS provider (Twilio/MSG91) add karne ke baad
-// isko database ya Redis mein move karna better hoga.
 const otpStore = new Map(); // phone -> { otp, expiresAt }
+const OTP_EXPIRY_MS = 5 * 60 * 1000;
 
-const OTP_EXPIRY_MS = 5 * 60 * 1000; // 5 minute
+// 2Factor.in API se real SMS bhejta hai — inka pre-approved OTP template use hota hai,
+// koi DLT registration ka wait nahi karna padta
+async function sendSmsVia2Factor(phone, otp) {
+  const apiKey = process.env.TWOFACTOR_API_KEY;
+  const url = `https://2factor.in/API/V1/${apiKey}/SMS/${phone}/${otp}`;
+  const response = await axios.get(url);
+  return response.data;
+}
 
-// POST /api/auth/send-otp — phone pe OTP "bhejta" hai
-router.post('/send-otp', (req, res) => {
+router.post('/send-otp', async (req, res) => {
   try {
     const { phone } = req.body;
 
@@ -18,29 +23,25 @@ router.post('/send-otp', (req, res) => {
       return res.status(400).json({ error: 'Sahi phone number daalo' });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit
     const expiresAt = Date.now() + OTP_EXPIRY_MS;
 
     otpStore.set(phone, { otp, expiresAt });
-
-    // Dev/testing ke liye terminal mein bhi print kar do
     console.log(`📱 OTP for ${phone}: ${otp}`);
 
-    // ⚠️ TESTING MODE: OTP response mein wapas bhej rahe hain taaki
-    // screen pe dikha sako bina real SMS service ke. Jab real SMS
-    // (Twilio/MSG91) integrate karo, to "otp" field yahan se HATA dena —
-    // warna koi bhi OTP dekh sakta hai response mein.
-    res.json({
-      message: 'OTP bhej diya (testing mode)',
-      otp, // 👈 sirf testing ke liye
-    });
+    try {
+      await sendSmsVia2Factor(phone, otp);
+    } catch (smsErr) {
+      console.error('2Factor SMS error:', smsErr.response?.data || smsErr.message);
+      return res.status(500).json({ error: 'SMS bhejne mein problem hui, dubara try karo' });
+    }
+
+    res.json({ message: 'OTP aapke phone pe bhej diya gaya hai' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// POST /api/auth/verify-otp — OTP match karta hai, aur batata hai
-// ki user already registered hai ya naya hai
 router.post('/verify-otp', async (req, res) => {
   try {
     const { phone, otp } = req.body;
@@ -50,30 +51,17 @@ router.post('/verify-otp', async (req, res) => {
     }
 
     const record = otpStore.get(phone);
-
-    if (!record) {
-      return res.status(400).json({ error: 'Pehle OTP bhejo' });
-    }
-
+    if (!record) return res.status(400).json({ error: 'Pehle OTP bhejo' });
     if (Date.now() > record.expiresAt) {
       otpStore.delete(phone);
       return res.status(400).json({ error: 'OTP expire ho gaya, dobara bhejo' });
     }
+    if (record.otp !== otp) return res.status(400).json({ error: 'OTP galat hai' });
 
-    if (record.otp !== otp) {
-      return res.status(400).json({ error: 'OTP galat hai' });
-    }
-
-    // OTP sahi hai — ab isko dobara use hone se roko
     otpStore.delete(phone);
-
     const existingUser = await User.findOne({ phone });
 
-    res.json({
-      valid: true,
-      exists: !!existingUser,
-      user: existingUser || null,
-    });
+    res.json({ valid: true, exists: !!existingUser, user: existingUser || null });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
