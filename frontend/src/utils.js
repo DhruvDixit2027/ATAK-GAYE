@@ -145,22 +145,43 @@ export async function watchLocation(onUpdate, onError) {
     return () => {};
   }
 
-  // 👇 Bahut kharaab (1km+ off ho sakti) shuruaati readings ko chhodo
-  // jab tak koi behtar (<= 500m accuracy) reading na aa jaaye.
+  // 👇 Bahut kharaab (1km+ off ho sakti) readings ko chhodo jab tak koi
+  // behtar (<= 500m accuracy) reading na aa jaaye. Ye check HAMESHA
+  // lagta hai — sirf shuruaat mein nahi — warna ek baar good fix mil
+  // jaane ke baad bhi koi bhi baad ki kharab (WiFi/network-based)
+  // reading seedha onUpdate() tak pahunch jaati thi, jisse baar-baar
+  // location "jump" karti dikhti thi (fix: pehle "!gotGoodFix &&" ke
+  // andar tha, ab hamesha check hota hai).
   //
-  // NAYA: agar 500m se behtar reading kabhi na mile (jaise laptop pe
-  // indoor testing karte waqt — WiFi-based location kai baar 500m se
-  // kharab hi rehti hai), to hum hamesha ke liye stuck nahi rehte.
-  // 15 second ke baad jo bhi best reading mili ho, usi se aage badh
-  // jaate hain — bilkul getCurrentLocation() ke max-wait fallback
-  // jaisa.
+  // Agar 500m se behtar reading kabhi na mile (jaise laptop pe indoor
+  // testing karte waqt — WiFi-based location kai baar 500m se kharab
+  // hi rehti hai), to hum hamesha ke liye stuck nahi rehte. 15 second
+  // ke baad jo bhi best reading mili ho, usi se aage badh jaate hain —
+  // bilkul getCurrentLocation() ke max-wait fallback jaisa. Uske baad
+  // bhi kharab readings discard hoti rehti hain, sirf ek baar fallback
+  // fire hoke best reading bhej di jaati hai.
+  //
+  // NAYA: agar 15 second ke baad bhi best reading bahut zyada kharab
+  // (5000m+, matlab poore shehar jitna off) hai, to use user ko bilkul
+  // mat dikhao — galat address dikhne se behtar hai "location
+  // unavailable" dikhana. Sirf 500m-5000m ke beech waali reading hi
+  // "kaam chalane layak best guess" maankar bheji jaati hai.
+  const ACCURACY_THRESHOLD = 500;
+  const FALLBACK_MAX_ACCURACY = 5000;
   let gotGoodFix = false;
   let bestReading = null;
 
   const fallbackTimer = setTimeout(() => {
-    if (!gotGoodFix && bestReading) {
+    if (gotGoodFix) return;
+    if (bestReading && bestReading.accuracy <= FALLBACK_MAX_ACCURACY) {
       gotGoodFix = true;
       onUpdate(bestReading);
+    } else {
+      onError?.(
+        new Error(
+          "Accurate location nahi mil paayi — behtar network/GPS signal wali jagah try karo"
+        )
+      );
     }
   }, 15000);
 
@@ -173,7 +194,7 @@ export async function watchLocation(onUpdate, onError) {
         bestReading = reading;
       }
 
-      if (!gotGoodFix && accuracy > 500) {
+      if (accuracy > ACCURACY_THRESHOLD) {
         console.warn(
           `Location reading discarded — accuracy ${Math.round(
             accuracy
@@ -181,8 +202,8 @@ export async function watchLocation(onUpdate, onError) {
         );
         return;
       }
-      gotGoodFix = true;
 
+      gotGoodFix = true;
       onUpdate(reading);
     },
     (error) => onError?.(error),

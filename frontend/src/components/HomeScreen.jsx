@@ -233,8 +233,9 @@ export default function HomeScreen() {
               </div>
             </div>
 
-            {/* Location pill */}
+            {/* Location pill — tap karke live map par jaayein */}
             <div
+              onClick={() => goTo("liveMap")}
               className="
               bg-white dark:bg-card
               rounded-2xl
@@ -244,6 +245,7 @@ export default function HomeScreen() {
               border-slate-100 dark:border-line
               max-w-[42%]
               shrink-0
+              cursor-pointer active:scale-95 transition-transform
             "
             >
               <div className="flex items-center gap-1">
@@ -391,8 +393,9 @@ export default function HomeScreen() {
             </div>
           </div>
 
-          {/* Live location — compact version (already dark, works in both modes) */}
+          {/* Live location — compact version (already dark, works in both modes) — tap karke live map par jaayein */}
           <div
+            onClick={() => goTo("liveMap")}
             className="
             fade-in-up delay-4
             mt-3
@@ -404,6 +407,7 @@ export default function HomeScreen() {
             to-slate-900
             shadow-2xl
             relative
+            cursor-pointer active:scale-95 transition-transform
           "
           >
             <div

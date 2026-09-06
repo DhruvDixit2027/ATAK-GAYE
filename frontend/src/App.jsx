@@ -10,7 +10,9 @@ import RequestHistoryScreen from "./components/RequestHistoryScreen";
 import ProfileScreen from "./components/ProfileScreen";
 import LoginScreen from "./components/LoginScreen"; // 👈 NAYA
 import PaymentScreen from "./components/PaymentScreen"; // 👈 NAYA
+import LiveMapScreen from "./components/LiveMapScreen"; // 👈 NAYA — full-screen Ola Maps live location
 import { useTheme } from "./hooks/useTheme"; // 👈 NAYA — dark mode
+
 
 function ScreenRouter() {
   const { screen, user, verifiedPhone } = useApp();
@@ -35,6 +37,8 @@ function ScreenRouter() {
       return <TrackingScreen />;
     case "payment":
       return <PaymentScreen />;
+    case "liveMap":
+      return <LiveMapScreen />;
 
     case "done":
       return <DoneScreen />;
@@ -61,6 +65,7 @@ export default function App() {
 
   return (
     <AppProvider>
+       
       <ScreenRouter />
     </AppProvider>
   );

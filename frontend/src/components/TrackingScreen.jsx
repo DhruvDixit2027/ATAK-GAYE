@@ -1,48 +1,27 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Phone, MessageCircle, X, Navigation2 } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, ZoomControl, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { OlaMaps } from "olamaps-web-sdk";
+// NOTE: olaMaps.init() jo map object deta hai wo poora MapLibre GL JS
+// API expose nahi karta — addControl() jaise kuch methods usme nahi hote.
+// Isliye NavigationControl (zoom +/- buttons) ko try/catch ke saath
+// optional rakha gaya hai, taaki agar ye method na ho to poori screen
+// crash na ho, sirf zoom buttons na dikhein.
+import { LngLatBounds, NavigationControl } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { useApp } from "../context/AppContext";
 import { BACKEND_URL } from "../config";
 import socket from "../socket";
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+// OlaMapTest.jsx wale confirmed pattern se hi banaya — ek hi instance
+// poore app mein reuse hoti hai, taaki har mount pe naya SDK object na bane
+const olaMaps = new OlaMaps({
+  apiKey: import.meta.env.VITE_OLA_MAPS_API_KEY,
 });
 
-const userIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
+const MAP_STYLE_URL =
+  "https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json";
 
-// Pin ki jagah ab scooter icon — direction ke hisaab se rotate hota hai
-function makeHelperIcon(bearingDeg = 0) {
-  return L.divIcon({
-    className: "helper-vehicle-icon",
-    html: `<div style="transform: rotate(${bearingDeg}deg); font-size:26px; line-height:1; filter: drop-shadow(0 2px 5px rgba(0,0,0,.35));">🛵</div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-  });
-}
-
-function FitBounds({ userPos, helperPos }) {
-  const map = useMap();
-  useEffect(() => {
-    if (userPos && helperPos) {
-      map.fitBounds([userPos, helperPos], { padding: [60, 60] });
-    } else if (userPos) {
-      map.setView(userPos, 15);
-    }
-  }, [userPos, helperPos, map]);
-  return null;
-}
+const ROUTE_SOURCE_ID = "helper-route-line";
 
 const DEFAULT_WINNER = {
   name: "Ravi Kumar",
@@ -88,18 +67,31 @@ export default function TrackingScreen() {
 
   const [requestDetails, setRequestDetails] = useState(null);
   const [liveDistanceKm, setLiveDistanceKm] = useState(w.distanceKm ?? null);
-  const [helperPos, setHelperPos] = useState(null); // raw target position socket se
-  const [displayPos, setDisplayPos] = useState(null); // animate hoke dikhne wali position
-  const [helperBearing, setHelperBearing] = useState(0); // icon rotation
+  // helperPos sirf glide-animation effect ko trigger karne ke liye state hai —
+  // actual marker position/rotation ab imperative refs se update hoti hai (no re-render per frame)
+  const [helperPos, setHelperPos] = useState(null); // [lat, lng]
 
   const initialDistanceRef = useRef(w.distanceKm ?? null);
-  const prevHelperPosRef = useRef(null);
-  const displayPosRef = useRef(null);
+  const prevHelperPosRef = useRef(null); // [lat, lng] - last known real (non-animated) helper pos
+  const displayPosRef = useRef(null); // [lat, lng] - currently animated/displayed helper pos
+  const helperBearingRef = useRef(0);
   const animFrameRef = useRef(null);
+
+  // ---- Ola Maps / MapLibre refs ----
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
+  const mapReadyRef = useRef(false);
+  const userMarkerRef = useRef(null);
+  const helperMarkerRef = useRef(null);
+  const helperMarkerElRef = useRef(null); // raw DOM node, taaki rotate CSS directly laga sakein
 
   const userPos = liveLocation
     ? [liveLocation.lat, liveLocation.lng]
     : null;
+  const userPosRef = useRef(userPos);
+  useEffect(() => {
+    userPosRef.current = userPos;
+  }, [userPos]);
 
   useEffect(() => {
     if (!currentRequestId) return;
@@ -135,7 +127,7 @@ export default function TrackingScreen() {
       if (prevHelperPosRef.current) {
         const [plat, plng] = prevHelperPosRef.current;
         if (plat !== lat || plng !== lng) {
-          setHelperBearing(getBearing(plat, plng, lat, lng));
+          helperBearingRef.current = getBearing(plat, plng, lat, lng);
         }
       }
       prevHelperPosRef.current = [lat, lng];
@@ -167,7 +159,163 @@ export default function TrackingScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentRequestId]);
 
-  // helperPos badalte hi icon ko smoothly glide karao (Blinkit jaisa), jump nahi
+  // ---------- Map helpers (imperative — MapLibre/Ola Maps style) ----------
+
+  function ensureRouteLayer(map) {
+    if (map.getSource(ROUTE_SOURCE_ID)) return;
+    map.addSource(ROUTE_SOURCE_ID, {
+      type: "geojson",
+      data: { type: "Feature", geometry: { type: "LineString", coordinates: [] } },
+    });
+    map.addLayer({
+      id: ROUTE_SOURCE_ID,
+      type: "line",
+      source: ROUTE_SOURCE_ID,
+      layout: { "line-join": "round", "line-cap": "round" },
+      paint: { "line-color": "#3B82F6", "line-width": 4 },
+    });
+  }
+
+  function updateRouteLine(map, helperLatLng, userLatLng) {
+    const source = map.getSource(ROUTE_SOURCE_ID);
+    if (!source) return;
+    const coordinates =
+      helperLatLng && userLatLng
+        ? [
+            [helperLatLng[1], helperLatLng[0]],
+            [userLatLng[1], userLatLng[0]],
+          ]
+        : [];
+    source.setData({ type: "Feature", geometry: { type: "LineString", coordinates } });
+  }
+
+  function fitMapToPoints(map, userLatLng, helperLatLng) {
+    if (userLatLng && helperLatLng) {
+      const bounds = new LngLatBounds(
+        [userLatLng[1], userLatLng[0]],
+        [userLatLng[1], userLatLng[0]]
+      );
+      bounds.extend([helperLatLng[1], helperLatLng[0]]);
+      map.fitBounds(bounds, { padding: 60, maxZoom: 16, duration: 500 });
+    } else if (userLatLng) {
+      map.setCenter([userLatLng[1], userLatLng[0]]);
+      map.setZoom(15);
+    }
+  }
+
+  function ensureUserMarker(map, latLng) {
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setLngLat([latLng[1], latLng[0]]);
+      return;
+    }
+    const el = document.createElement("div");
+    el.style.fontSize = "26px";
+    el.style.lineHeight = "1";
+    el.style.filter = "drop-shadow(0 2px 4px rgba(0,0,0,.35))";
+    el.textContent = "📍";
+    // Confirmed syntax from Ola Maps Web SDK docs (Adding Markers page)
+    const popup = new OlaMaps.Popup({ offset: 20 }).setText("Aap yahan hain");
+    userMarkerRef.current = new OlaMaps.Marker({ element: el, anchor: "bottom" })
+      .setLngLat([latLng[1], latLng[0]])
+      .setPopup(popup)
+      .addTo(map);
+  }
+
+  function ensureHelperMarker(map, latLng, bearingDeg) {
+    if (helperMarkerRef.current) {
+      helperMarkerRef.current.setLngLat([latLng[1], latLng[0]]);
+      if (helperMarkerElRef.current) {
+        helperMarkerElRef.current.style.transform = `rotate(${bearingDeg}deg)`;
+      }
+      return;
+    }
+    const el = document.createElement("div");
+    el.style.fontSize = "26px";
+    el.style.lineHeight = "1";
+    el.style.filter = "drop-shadow(0 2px 5px rgba(0,0,0,.35))";
+    el.style.transform = `rotate(${bearingDeg}deg)`;
+    el.style.transition = "transform 0.2s linear";
+    el.textContent = "🛵";
+    helperMarkerElRef.current = el;
+    const popup = new OlaMaps.Popup({ offset: 20 }).setText(`${firstName} yahan hai`);
+    helperMarkerRef.current = new OlaMaps.Marker({ element: el, anchor: "center" })
+      .setLngLat([latLng[1], latLng[0]])
+      .setPopup(popup)
+      .addTo(map);
+  }
+
+  // ---------- Map init — sirf ek baar, jab pehli baar userPos milta hai ----------
+  useEffect(() => {
+    if (!userPos || mapRef.current || !mapContainerRef.current) return;
+    let cancelled = false;
+
+    (async () => {
+      // 🔧 FIX: olaMaps.init() ek Promise return karta hai — pehle isko
+      // await nahi kiya jaa raha tha, isliye "map" actually Promise object
+      // ban raha tha aur map.on()/map.addControl() jaise calls crash kar
+      // rahe the (Promise pe wo methods hote hi nahi).
+      const map = await olaMaps.init({
+        style: MAP_STYLE_URL,
+        container: mapContainerRef.current,
+        center: [userPos[1], userPos[0]],
+        zoom: 15,
+      });
+
+      if (cancelled) {
+        if (map && typeof map.remove === "function") map.remove();
+        return;
+      }
+
+      mapRef.current = map;
+
+      try {
+        if (typeof map.addControl === "function") {
+          map.addControl(new NavigationControl(), "bottom-right");
+        }
+      } catch (e) {
+        console.warn("NavigationControl is not supported by this map instance:", e);
+      }
+
+      map.on("load", () => {
+        if (cancelled) return;
+        mapReadyRef.current = true;
+        ensureRouteLayer(map);
+        ensureUserMarker(map, userPosRef.current);
+
+        const dp = displayPosRef.current;
+        if (dp) {
+          ensureHelperMarker(map, dp, helperBearingRef.current);
+        }
+        updateRouteLine(map, prevHelperPosRef.current, userPosRef.current);
+        fitMapToPoints(map, userPosRef.current, prevHelperPosRef.current);
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(animFrameRef.current);
+      if (mapRef.current && typeof mapRef.current.remove === "function") {
+        mapRef.current.remove();
+      }
+      mapRef.current = null;
+      mapReadyRef.current = false;
+      userMarkerRef.current = null;
+      helperMarkerRef.current = null;
+      helperMarkerElRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [Boolean(userPos)]);
+
+  // userPos (apna GPS) badalne pe marker + route ko update karo, map re-init nahi karte
+  useEffect(() => {
+    if (!mapReadyRef.current || !mapRef.current || !userPos) return;
+    ensureUserMarker(mapRef.current, userPos);
+    updateRouteLine(mapRef.current, displayPosRef.current || prevHelperPosRef.current, userPos);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userPos]);
+
+  // helperPos badalte hi icon ko smoothly glide karao (Blinkit jaisa), jump nahi —
+  // ab yeh directly map marker ko move karta hai, React state pe nahi (60fps re-render se bachne ke liye)
   useEffect(() => {
     if (!helperPos) return;
 
@@ -183,9 +331,16 @@ export default function TrackingScreen() {
       const lat = from[0] + (to[0] - from[0]) * t;
       const lng = from[1] + (to[1] - from[1]) * t;
       displayPosRef.current = [lat, lng];
-      setDisplayPos([lat, lng]);
+
+      if (mapReadyRef.current && mapRef.current) {
+        ensureHelperMarker(mapRef.current, [lat, lng], helperBearingRef.current);
+        updateRouteLine(mapRef.current, [lat, lng], userPosRef.current);
+      }
+
       if (t < 1) {
         animFrameRef.current = requestAnimationFrame(step);
+      } else if (mapReadyRef.current && mapRef.current) {
+        fitMapToPoints(mapRef.current, userPosRef.current, [lat, lng]);
       }
     }
     animFrameRef.current = requestAnimationFrame(step);
@@ -251,8 +406,7 @@ export default function TrackingScreen() {
         .fade-in-up { opacity: 0; animation: fadeInUp 0.5s ease-out forwards; }
         @keyframes dotPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.5); } 50% { box-shadow: 0 0 0 6px rgba(46,204,113,0); } }
         .dot-pulse { animation: dotPulse 1.6s ease-in-out infinite; }
-        .leaflet-container { background: #e5e7eb; }
-        .helper-vehicle-icon { background: transparent; border: none; }
+        .ola-map-container { background: #e5e7eb; }
       `}</style>
 
       {/* Blinkit-jaisa bold banner top pe — orange, dono modes mein same rehta hai */}
@@ -278,41 +432,10 @@ export default function TrackingScreen() {
         )}
       </div>
 
-      {/* Map — banner ke neeche thoda overlap karke rounded card jaisa (tiles jaan-boojh kar dark nahi kiye, alag tile provider chahiye hoga) */}
+      {/* Map — banner ke neeche thoda overlap karke rounded card jaisa */}
       <div className="relative -mt-4 mx-3 rounded-3xl overflow-hidden shadow-xl h-[230px] shrink-0 z-[1000] ring-1 ring-black/0 dark:ring-line">
         {userPos ? (
-          <MapContainer
-            center={userPos}
-            zoom={15}
-            scrollWheelZoom={false}
-            zoomControl={false}
-            style={{ width: "100%", height: "100%" }}
-          >
-            <TileLayer
-              attribution='&copy; OpenStreetMap contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <ZoomControl position="bottomright" />
-
-            <Marker position={userPos} icon={userIcon}>
-              <Popup>Aap yahan hain</Popup>
-            </Marker>
-
-            {displayPos && (
-              <Marker position={displayPos} icon={makeHelperIcon(helperBearing)}>
-                <Popup>{firstName} yahan hai</Popup>
-              </Marker>
-            )}
-
-            {userPos && helperPos && (
-              <Polyline
-                positions={[helperPos, userPos]}
-                pathOptions={{ color: "#3B82F6", weight: 4 }}
-              />
-            )}
-
-            <FitBounds userPos={userPos} helperPos={helperPos} />
-          </MapContainer>
+          <div ref={mapContainerRef} className="ola-map-container" style={{ width: "100%", height: "100%" }} />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-sm text-slate-400 dark:text-text-dim bg-slate-100 dark:bg-card">
             Location la rahe hain...
