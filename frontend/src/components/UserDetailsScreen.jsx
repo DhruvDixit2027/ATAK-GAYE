@@ -123,9 +123,9 @@ export default function UserDetailsScreen({ editMode = false }) {
   };
 
   return (
-    <div className="absolute inset-0 bg-slate-50 flex flex-col overflow-hidden">
+    <div className="absolute inset-0 bg-slate-50 dark:bg-bg flex flex-col overflow-hidden">
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none dark:opacity-40"
         style={{
           background:
             "radial-gradient(circle at top,#FFF2E9 0%,transparent 45%)",
@@ -139,16 +139,16 @@ export default function UserDetailsScreen({ editMode = false }) {
             {editMode && (
               <div
                 onClick={() => goTo(user ? "profile" : "home")}
-                className="w-9 h-9 rounded-xl bg-white shadow-lg border border-slate-100 flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0"
+                className="w-9 h-9 rounded-xl bg-white dark:bg-card shadow-lg border border-slate-100 dark:border-line flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0"
               >
-                <ChevronLeft size={18} className="text-slate-700" />
+                <ChevronLeft size={18} className="text-slate-700 dark:text-text" />
               </div>
             )}
-            <div className="text-lg sm:text-xl font-black text-slate-900">
+            <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-text">
               {editMode ? "Apni profile edit karo" : "Apni details bharo"}
             </div>
           </div>
-          <div className="text-xs sm:text-sm text-slate-500 mb-5 ml-0.5">
+          <div className="text-xs sm:text-sm text-slate-500 dark:text-text-dim mb-5 ml-0.5">
             {editMode
               ? "Apni details update karo yahan se"
               : "Helper aapko contact kar sake, isliye ye zaroori hai"}
@@ -157,7 +157,7 @@ export default function UserDetailsScreen({ editMode = false }) {
           {/* Photo upload */}
           <div className="flex flex-col items-center mb-5">
             <label className="relative cursor-pointer group">
-              <div className="w-20 h-20 rounded-full overflow-hidden shadow-xl ring-4 ring-white bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full overflow-hidden shadow-xl ring-4 ring-white dark:ring-card bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center">
                 {photoPreview ? (
                   <img
                     src={photoPreview}
@@ -170,8 +170,8 @@ export default function UserDetailsScreen({ editMode = false }) {
                   </span>
                 )}
               </div>
-              <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center group-active:scale-90 transition-transform">
-                <Camera size={13} className="text-orange-500" />
+              <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-white dark:bg-card shadow-lg border border-slate-100 dark:border-line flex items-center justify-center group-active:scale-90 transition-transform">
+                <Camera size={13} className="text-orange-500 dark:text-accent" />
               </div>
               <input
                 type="file"
@@ -180,19 +180,19 @@ export default function UserDetailsScreen({ editMode = false }) {
                 className="hidden"
               />
             </label>
-            <div className="text-[11px] text-slate-400 mt-2">
+            <div className="text-[11px] text-slate-400 dark:text-text-dim mt-2">
               Photo lagane ke liye tap karo
             </div>
           </div>
 
           {/* Form card */}
-          <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-100">
+          <div className="bg-white dark:bg-card rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-100 dark:border-line">
             <div className="mb-3">
-              <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 mb-1.5 ml-1">
-                <User size={13} className="text-orange-500" /> Naam
+              <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 dark:text-text-dim mb-1.5 ml-1">
+                <User size={13} className="text-orange-500 dark:text-accent" /> Naam
               </div>
               <input
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition-all"
+                className="w-full bg-slate-50 dark:bg-bg border border-slate-200 dark:border-line rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-text outline-none focus:border-orange-300 dark:focus:border-accent focus:ring-2 focus:ring-orange-100 dark:focus:ring-accent/20 transition-all"
                 placeholder="Aapka naam"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -200,28 +200,28 @@ export default function UserDetailsScreen({ editMode = false }) {
             </div>
 
             <div className="mb-3">
-              <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 mb-1.5 ml-1">
-                <Phone size={13} className="text-orange-500" /> Phone number
-                <span className="text-[10px] text-green-600 font-bold ml-1">✓ Verified</span>
+              <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 dark:text-text-dim mb-1.5 ml-1">
+                <Phone size={13} className="text-orange-500 dark:text-accent" /> Phone number
+                <span className="text-[10px] text-green-600 dark:text-safe font-bold ml-1">✓ Verified</span>
               </div>
               <input
-                className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-500 outline-none cursor-not-allowed"
+                className="w-full bg-slate-100 dark:bg-card-2 border border-slate-200 dark:border-line rounded-xl px-4 py-3 text-sm text-slate-500 dark:text-text-dim outline-none cursor-not-allowed"
                 placeholder="Phone number"
                 value={phone}
                 readOnly
                 disabled
               />
-              <div className="text-[10px] text-slate-400 mt-1 ml-1">
+              <div className="text-[10px] text-slate-400 dark:text-text-dim mt-1 ml-1">
                 Phone number change nahi ho sakta (OTP se verified hai)
               </div>
             </div>
 
             <div className="mb-1">
-              <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 mb-1.5 ml-1">
-                <Bike size={13} className="text-orange-500" /> Vehicle
+              <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 dark:text-text-dim mb-1.5 ml-1">
+                <Bike size={13} className="text-orange-500 dark:text-accent" /> Vehicle
               </div>
               <select
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition-all"
+                className="w-full bg-slate-50 dark:bg-bg border border-slate-200 dark:border-line rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-text outline-none focus:border-orange-300 dark:focus:border-accent focus:ring-2 focus:ring-orange-100 dark:focus:ring-accent/20 transition-all"
                 value={vehicleType}
                 onChange={(e) => setVehicleType(e.target.value)}
               >
@@ -234,7 +234,7 @@ export default function UserDetailsScreen({ editMode = false }) {
           </div>
 
           {error && (
-            <div className="text-red-500 text-xs font-medium mt-3 ml-1">{error}</div>
+            <div className="text-red-500 dark:text-danger text-xs font-medium mt-3 ml-1">{error}</div>
           )}
 
           <button
@@ -249,7 +249,7 @@ export default function UserDetailsScreen({ editMode = false }) {
           {editMode && (
             <button
               onClick={() => goTo(user ? "profile" : "home")}
-              className="w-full py-3 mt-2.5 rounded-2xl border border-slate-200 bg-white text-slate-500 text-sm font-semibold shadow-sm active:scale-95 transition-transform"
+              className="w-full py-3 mt-2.5 rounded-2xl border border-slate-200 dark:border-line bg-white dark:bg-card text-slate-500 dark:text-text-dim text-sm font-semibold shadow-sm active:scale-95 transition-transform"
             >
               Cancel
             </button>

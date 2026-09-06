@@ -12,7 +12,7 @@ export default function BottomNav() {
   const { screen, goTo } = useApp();
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] flex items-center justify-around pb-5 pt-2.5">
+    <div className="absolute bottom-0 left-0 right-0 bg-white/90 dark:bg-card/90 backdrop-blur-md border-t border-slate-100 dark:border-line shadow-[0_-4px_20px_rgba(0,0,0,0.04)] flex items-center justify-around pb-5 pt-2.5">
       {items.map((it) => {
         const Icon = it.icon;
         const active = screen === it.screen;
@@ -24,18 +24,18 @@ export default function BottomNav() {
           >
             <div
               className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-                active ? "bg-orange-50" : "bg-transparent"
+                active ? "bg-orange-50 dark:bg-card-2" : "bg-transparent"
               }`}
             >
               <Icon
                 size={19}
-                className={active ? "text-orange-500" : "text-slate-400"}
+                className={active ? "text-orange-500 dark:text-accent" : "text-slate-400 dark:text-text-dim"}
                 strokeWidth={active ? 2.4 : 2}
               />
             </div>
             <span
               className={`text-[10.5px] font-semibold ${
-                active ? "text-orange-500" : "text-slate-400"
+                active ? "text-orange-500 dark:text-accent" : "text-slate-400 dark:text-text-dim"
               }`}
             >
               {it.label}

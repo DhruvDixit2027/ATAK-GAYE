@@ -215,7 +215,7 @@ try {
     : [];
 
   return (
-    <div className="absolute inset-0 bg-slate-50 flex flex-col overflow-hidden">
+    <div className="absolute inset-0 bg-slate-50 dark:bg-bg flex flex-col overflow-hidden">
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(18px); }
@@ -245,7 +245,7 @@ try {
       `}</style>
 
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none dark:opacity-40"
         style={{
           background:
             "radial-gradient(circle at top,#FFF2E9 0%,transparent 45%)",
@@ -261,14 +261,14 @@ try {
             h-11 w-11 sm:h-12 sm:w-12
             shrink-0
             rounded-2xl
-            bg-white
+            bg-white dark:bg-card
             border
-            border-slate-100
+            border-slate-100 dark:border-line
             shadow-lg
             flex
             items-center
             justify-center
-            text-slate-700
+            text-slate-700 dark:text-text
             active:scale-90
             transition-transform
           "
@@ -276,7 +276,7 @@ try {
             <ArrowLeft size={20} />
           </button>
 
-          <h1 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 leading-tight">
+          <h1 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-text leading-tight">
             AI Best Helper Dhoondh Raha Hai
           </h1>
         </div>
@@ -294,26 +294,28 @@ try {
             gap-3
             rounded-2xl sm:rounded-3xl
             border
-            border-orange-200
+            border-orange-200 dark:border-accent/40
             px-4 py-3.5
             mb-4
             bg-gradient-to-br
             from-orange-50
             to-amber-50
+            dark:from-card
+            dark:to-card
             shadow-sm
           "
           >
             <div className="relative shrink-0">
-              <div className="w-3 h-3 rounded-full bg-orange-500 animate-ping absolute inset-0" />
-              <div className="w-3 h-3 rounded-full bg-orange-500 relative" />
+              <div className="w-3 h-3 rounded-full bg-orange-500 dark:bg-accent animate-ping absolute inset-0" />
+              <div className="w-3 h-3 rounded-full bg-orange-500 dark:bg-accent relative" />
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-bold text-slate-900">{statusText}</div>
-              <div className="text-[11px] text-slate-500 mt-0.5">
+              <div className="text-sm font-bold text-slate-900 dark:text-text">{statusText}</div>
+              <div className="text-[11px] text-slate-500 dark:text-text-dim mt-0.5">
                 Atak Gaye AI Engine · distance, rating, skill, availability check kar raha hai
               </div>
               {userAddress && (
-                <div className="flex items-center gap-1 text-[10.5px] text-orange-600 font-semibold mt-1 truncate">
+                <div className="flex items-center gap-1 text-[10.5px] text-orange-600 dark:text-accent-2 font-semibold mt-1 truncate">
                   <MapPin size={11} className="shrink-0" />
                   <span className="truncate">{userAddress}</span>
                 </div>
@@ -322,7 +324,7 @@ try {
           </div>
 
           {showWinner && (
-            <div className="fade-in-up delay-2 text-[11px] text-slate-500 mb-3">
+            <div className="fade-in-up delay-2 text-[11px] text-slate-500 dark:text-text-dim mb-3">
               👆 Chahe to niche list mein se koi aur helper bhi chun sakte ho
             </div>
           )}
@@ -336,32 +338,32 @@ try {
                 <div
                   key={h.id || h.name}
                   onClick={() => handleSelectCandidate(h)}
-                  className={`item-in bg-white border rounded-2xl sm:rounded-3xl px-4 py-3.5 shadow-lg transition-all ${
+                  className={`item-in bg-white dark:bg-card border rounded-2xl sm:rounded-3xl px-4 py-3.5 shadow-lg transition-all ${
                     isChosen
-                      ? "border-green-500 shadow-green-100"
-                      : "border-slate-100"
+                      ? "border-green-500 dark:border-safe shadow-green-100 dark:shadow-none"
+                      : "border-slate-100 dark:border-line"
                   } ${isDimmed ? "opacity-45" : ""} ${
                     showWinner ? "cursor-pointer active:scale-[0.98]" : ""
                   }`}
                   style={{ animationDelay: `${index * 0.15}s` }}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 sm:w-[38px] sm:h-[38px] rounded-full bg-orange-50 flex items-center justify-center text-sm font-bold text-orange-600 shrink-0">
+                    <div className="w-10 h-10 sm:w-[38px] sm:h-[38px] rounded-full bg-orange-50 dark:bg-card-2 flex items-center justify-center text-sm font-bold text-orange-600 dark:text-accent shrink-0">
                       {h.init}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-bold text-slate-900 truncate">{h.name}</div>
-                      <div className="text-[10.5px] text-slate-500 mt-0.5 truncate">{h.vehicle}</div>
+                      <div className="text-sm font-bold text-slate-900 dark:text-text truncate">{h.name}</div>
+                      <div className="text-[10.5px] text-slate-500 dark:text-text-dim mt-0.5 truncate">{h.vehicle}</div>
                     </div>
                     <div className="ml-auto text-right shrink-0">
-                      <div className="text-lg font-black text-orange-500">
+                      <div className="text-lg font-black text-orange-500 dark:text-accent">
                         {revealedScores ? `${h.matchPercent}%` : "--"}
                       </div>
-                      <div className="text-[9.5px] text-slate-400">Match</div>
+                      <div className="text-[9.5px] text-slate-400 dark:text-text-dim">Match</div>
                     </div>
                   </div>
 
-                  <div className="h-[3px] w-full bg-slate-100 rounded-full mt-2.5 overflow-hidden">
+                  <div className="h-[3px] w-full bg-slate-100 dark:bg-line rounded-full mt-2.5 overflow-hidden">
                     <div
                       className="h-full rounded-full transition-[width] duration-500"
                       style={{
@@ -372,19 +374,19 @@ try {
                   </div>
 
                   <div className="grid grid-cols-3 gap-1.5 mt-2.5">
-                    <div className="bg-slate-50 rounded-lg py-1.5 px-1.5 text-center">
-                      <div className="text-[11px] font-bold text-slate-900">{h.distanceKm} km</div>
-                      <div className="text-[8.5px] text-slate-500 mt-0.5">Distance</div>
+                    <div className="bg-slate-50 dark:bg-card-2 rounded-lg py-1.5 px-1.5 text-center">
+                      <div className="text-[11px] font-bold text-slate-900 dark:text-text">{h.distanceKm} km</div>
+                      <div className="text-[8.5px] text-slate-500 dark:text-text-dim mt-0.5">Distance</div>
                     </div>
-                    <div className="bg-slate-50 rounded-lg py-1.5 px-1.5 text-center">
-                      <div className="text-[11px] font-bold text-slate-900">⭐ {h.rating}</div>
-                      <div className="text-[8.5px] text-slate-500 mt-0.5">Rating</div>
+                    <div className="bg-slate-50 dark:bg-card-2 rounded-lg py-1.5 px-1.5 text-center">
+                      <div className="text-[11px] font-bold text-slate-900 dark:text-text">⭐ {h.rating}</div>
+                      <div className="text-[8.5px] text-slate-500 dark:text-text-dim mt-0.5">Rating</div>
                     </div>
-                    <div className="bg-slate-50 rounded-lg py-1.5 px-1.5 text-center">
-                      <div className="text-[11px] font-bold text-slate-900">
+                    <div className="bg-slate-50 dark:bg-card-2 rounded-lg py-1.5 px-1.5 text-center">
+                      <div className="text-[11px] font-bold text-slate-900 dark:text-text">
                         {Math.round(h.successRate * 100)}%
                       </div>
-                      <div className="text-[8.5px] text-slate-500 mt-0.5">Success rate</div>
+                      <div className="text-[8.5px] text-slate-500 dark:text-text-dim mt-0.5">Success rate</div>
                     </div>
                   </div>
                 </div>
@@ -394,13 +396,13 @@ try {
 
           {/* Winner detail card */}
           {showWinner && chosenData && (
-            <div className="item-in bg-white border border-green-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5 mt-3 shadow-xl">
+            <div className="item-in bg-white dark:bg-card border border-green-200 dark:border-safe/50 rounded-2xl sm:rounded-3xl p-4 sm:p-5 mt-3 shadow-xl">
               <div className="flex items-center justify-between gap-2">
-                <div className="inline-flex items-center gap-1 text-[11px] font-extrabold text-green-600 bg-green-50 px-2.5 py-1 rounded-full tracking-wide">
+                <div className="inline-flex items-center gap-1 text-[11px] font-extrabold text-green-600 dark:text-safe bg-green-50 dark:bg-safe/15 px-2.5 py-1 rounded-full tracking-wide">
                   <CheckCircle2 size={13} />
                   {selectedId ? "AAPKA CHOICE" : "AI CHOICE"}
                 </div>
-                <div className="font-black text-orange-500 text-sm sm:text-base shrink-0">
+                <div className="font-black text-orange-500 dark:text-accent text-sm sm:text-base shrink-0">
                   Match {chosenData.matchPercent}%
                 </div>
               </div>
@@ -410,28 +412,28 @@ try {
                   {chosenData.init}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-base sm:text-lg font-bold text-slate-900 truncate">
+                  <div className="text-base sm:text-lg font-bold text-slate-900 dark:text-text truncate">
                     {chosenData.name}
                   </div>
-                  <div className="text-xs text-slate-500 mt-0.5 truncate">
+                  <div className="text-xs text-slate-500 dark:text-text-dim mt-0.5 truncate">
                     {chosenData.vehicle} · ETA {chosenData.etaMin} min
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 my-4">
-                <Bot size={14} className="text-orange-500" />
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-text-dim my-4">
+                <Bot size={14} className="text-orange-500 dark:text-accent" />
                 Isko kyun chuna gaya:
               </div>
 
               <div>
                 {reasons.map((r) => (
                   <div key={r.label} className="mb-2.5">
-                    <div className="flex justify-between text-[11px] mb-1 text-slate-500">
+                    <div className="flex justify-between text-[11px] mb-1 text-slate-500 dark:text-text-dim">
                       <span>{r.label}</span>
-                      <b className="text-slate-900 font-semibold">{r.sub}</b>
+                      <b className="text-slate-900 dark:text-text font-semibold">{r.sub}</b>
                     </div>
-                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-slate-100 dark:bg-line rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-[width] duration-700"
                         style={{ width: `${r.pct}%`, background: "linear-gradient(90deg,#FF6A3D,#FFC145)" }}
@@ -439,20 +441,20 @@ try {
                     </div>
                   </div>
                 ))}
-                <div className="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full mt-1.5">
+                <div className="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-green-600 dark:text-safe bg-green-50 dark:bg-safe/15 px-2.5 py-1 rounded-full mt-1.5">
                   <Bot size={12} />
                   AI Confidence: {chosenData.matchPercent}%
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-between bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3">
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                  <IndianRupee size={16} className="text-orange-500" />
+              <div className="mt-4 flex items-center justify-between bg-orange-50 dark:bg-accent/10 border border-orange-200 dark:border-accent/40 rounded-2xl px-4 py-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-text">
+                  <IndianRupee size={16} className="text-orange-500 dark:text-accent" />
                   Service Charge
                 </div>
-                <div className="text-xl font-black text-orange-600">₹{price}</div>
+                <div className="text-xl font-black text-orange-600 dark:text-accent">₹{price}</div>
               </div>
-              <div className="text-[10.5px] text-slate-400 text-center mt-2">
+              <div className="text-[10.5px] text-slate-400 dark:text-text-dim text-center mt-2">
   💳 Payment job complete hone ke baad liya jaayega
 </div>
             </div>
@@ -462,7 +464,7 @@ try {
 
       {/* Sticky CTA */}
       {showWinner && (
-        <div className="relative px-4 sm:px-5 pt-6 pb-6 sm:pb-8 bg-gradient-to-t from-slate-50 via-slate-50/85 to-transparent">
+        <div className="relative px-4 sm:px-5 pt-6 pb-6 sm:pb-8 bg-gradient-to-t from-slate-50 via-slate-50/85 to-transparent dark:from-bg dark:via-bg/85 dark:to-transparent">
           <div className="max-w-md mx-auto w-full">
             <button
   onClick={handleConfirmRequest}

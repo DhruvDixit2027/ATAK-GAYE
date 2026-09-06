@@ -121,61 +121,61 @@ export default function PaymentScreen() {
 
   if (loading) {
     return (
-      <div className="absolute inset-0 bg-slate-50 flex flex-col items-center justify-center px-8 text-center">
-        <div className="w-9 h-9 rounded-full border-[3px] border-orange-400 border-t-transparent animate-spin mb-4" />
-        <div className="text-sm text-slate-500">Details load ho rahe hain...</div>
+      <div className="absolute inset-0 bg-slate-50 dark:bg-bg flex flex-col items-center justify-center px-8 text-center">
+        <div className="w-9 h-9 rounded-full border-[3px] border-orange-400 dark:border-accent border-t-transparent animate-spin mb-4" />
+        <div className="text-sm text-slate-500 dark:text-text-dim">Details load ho rahe hain...</div>
       </div>
     );
   }
 
   return (
-    <div className="absolute inset-0 bg-slate-50 flex flex-col overflow-hidden">
+    <div className="absolute inset-0 bg-slate-50 dark:bg-bg flex flex-col overflow-hidden">
       <div className="relative flex-1 overflow-y-auto px-4 sm:px-5 pt-10 pb-6">
         <div className="max-w-md mx-auto w-full">
           <div className="flex flex-col items-center text-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mb-3">
-              <CheckCircle2 size={32} className="text-green-500" />
+            <div className="w-16 h-16 rounded-full bg-green-50 dark:bg-safe/15 flex items-center justify-center mb-3">
+              <CheckCircle2 size={32} className="text-green-500 dark:text-safe" />
             </div>
-            <div className="text-lg font-black text-slate-900">
+            <div className="text-lg font-black text-slate-900 dark:text-text">
               Job Complete Ho Gaya!
             </div>
-            <div className="text-sm text-slate-500 mt-1">
+            <div className="text-sm text-slate-500 dark:text-text-dim mt-1">
               Ab payment complete karein
             </div>
           </div>
 
-          <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-lg">
+          <div className="bg-white dark:bg-card border border-slate-100 dark:border-line rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-lg">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white bg-gradient-to-br from-orange-500 to-orange-300 shrink-0 shadow-lg">
                 {helperInit}
               </div>
               <div className="min-w-0">
-                <div className="text-base font-bold text-slate-900 truncate">
+                <div className="text-base font-bold text-slate-900 dark:text-text truncate">
                   {helperName}
                 </div>
-                <div className="text-xs text-slate-500 mt-0.5 capitalize">
+                <div className="text-xs text-slate-500 dark:text-text-dim mt-0.5 capitalize">
                   {issueType} service
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 flex items-center justify-between bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3">
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <IndianRupee size={16} className="text-orange-500" />
+            <div className="mt-4 flex items-center justify-between bg-orange-50 dark:bg-accent/10 border border-orange-200 dark:border-accent/40 rounded-2xl px-4 py-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-text">
+                <IndianRupee size={16} className="text-orange-500 dark:text-accent" />
                 Total Amount
               </div>
-              <div className="text-xl font-black text-orange-600">₹{amount}</div>
+              <div className="text-xl font-black text-orange-600 dark:text-accent">₹{amount}</div>
             </div>
 
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-3">
-              <ShieldCheck size={13} className="text-green-500" />
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-text-dim mt-3">
+              <ShieldCheck size={13} className="text-green-500 dark:text-safe" />
               Payment Razorpay ke through securely process hoga
             </div>
           </div>
         </div>
       </div>
 
-      <div className="relative px-4 sm:px-5 pt-6 pb-6 sm:pb-8 bg-gradient-to-t from-slate-50 via-slate-50/85 to-transparent">
+      <div className="relative px-4 sm:px-5 pt-6 pb-6 sm:pb-8 bg-gradient-to-t from-slate-50 via-slate-50/85 to-transparent dark:from-bg dark:via-bg/85 dark:to-transparent">
         <div className="max-w-md mx-auto w-full">
           <button
             onClick={handlePayNow}

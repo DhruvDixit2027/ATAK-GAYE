@@ -26,7 +26,7 @@ export default function DoneScreen() {
 };
 
   return (
-    <div className="absolute inset-0 bg-slate-50 flex flex-col items-center justify-center text-center px-8 py-10 overflow-hidden">
+    <div className="absolute inset-0 bg-slate-50 dark:bg-bg flex flex-col items-center justify-center text-center px-8 py-10 overflow-hidden">
       <style>{`
         @keyframes popCheck {
           0% { opacity: 0; transform: scale(0.4) rotate(-10deg); }
@@ -58,7 +58,7 @@ export default function DoneScreen() {
         .star-pop { animation: starPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
       `}</style>
 
-      {/* Confetti dots */}
+      {/* Confetti dots — waise hi rakhe, bright colors dono modes mein achhe dikhte hain */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-40 pointer-events-none">
         <div className="confetti-dot absolute left-[10%] top-0 w-2 h-2 rounded-full bg-orange-400" style={{ animationDelay: "0s" }} />
         <div className="confetti-dot absolute left-[30%] top-0 w-2.5 h-2.5 rounded-sm bg-yellow-400" style={{ animationDelay: "0.3s" }} />
@@ -69,23 +69,23 @@ export default function DoneScreen() {
 
       {/* Checkmark with expanding rings */}
       <div className="relative flex items-center justify-center mb-6">
-        <div className="ring-expand absolute w-20 h-20 rounded-full border-2 border-green-300" />
-        <div className="ring-expand absolute w-20 h-20 rounded-full border-2 border-green-300" style={{ animationDelay: "0.6s" }} />
-        <div className="pop-check relative w-20 h-20 rounded-full bg-green-50 border-2 border-green-400 flex items-center justify-center shadow-lg">
-          <CheckCircle2 size={38} className="text-green-500" strokeWidth={2.2} />
+        <div className="ring-expand absolute w-20 h-20 rounded-full border-2 border-green-300 dark:border-safe/60" />
+        <div className="ring-expand absolute w-20 h-20 rounded-full border-2 border-green-300 dark:border-safe/60" style={{ animationDelay: "0.6s" }} />
+        <div className="pop-check relative w-20 h-20 rounded-full bg-green-50 dark:bg-safe/15 border-2 border-green-400 dark:border-safe flex items-center justify-center shadow-lg">
+          <CheckCircle2 size={38} className="text-green-500 dark:text-safe" strokeWidth={2.2} />
         </div>
       </div>
 
-      <h2 className="text-in text-2xl font-black text-slate-900" style={{ animationDelay: "0.3s" }}>
+      <h2 className="text-in text-2xl font-black text-slate-900 dark:text-text" style={{ animationDelay: "0.3s" }}>
         Madad mil gayi!
       </h2>
-      <div className="text-in text-sm text-slate-500 mt-2 max-w-xs" style={{ animationDelay: "0.4s" }}>
+      <div className="text-in text-sm text-slate-500 dark:text-text-dim mt-2 max-w-xs" style={{ animationDelay: "0.4s" }}>
         {name} ne aapki problem solve kar di. Umeed hai ab safar smooth chalega.
       </div>
 
       {/* Rating card */}
-      <div className="text-in bg-white rounded-2xl shadow-lg border border-slate-100 px-6 py-5 mt-6 w-full max-w-xs" style={{ animationDelay: "0.5s" }}>
-        <div className="text-xs font-semibold text-slate-500 mb-3">
+      <div className="text-in bg-white dark:bg-card rounded-2xl shadow-lg border border-slate-100 dark:border-line px-6 py-5 mt-6 w-full max-w-xs" style={{ animationDelay: "0.5s" }}>
+        <div className="text-xs font-semibold text-slate-500 dark:text-text-dim mb-3">
           {name} ko rate karo
         </div>
         <div className="flex justify-center gap-1.5">
@@ -101,8 +101,8 @@ export default function DoneScreen() {
               <span
                 className={
                   n <= (hoverRating || rating)
-                    ? "text-yellow-400"
-                    : "text-slate-200"
+                    ? "text-yellow-400 dark:text-accent-2"
+                    : "text-slate-200 dark:text-line"
                 }
               >
                 ★
@@ -111,7 +111,7 @@ export default function DoneScreen() {
           ))}
         </div>
         {rating > 0 && (
-          <div className="text-in text-xs text-green-600 font-semibold mt-3">
+          <div className="text-in text-xs text-green-600 dark:text-safe font-semibold mt-3">
             Shukriya! Aapne {rating} star diye ⭐
           </div>
         )}

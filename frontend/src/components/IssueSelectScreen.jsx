@@ -48,7 +48,7 @@ export default function IssueSelectScreen() {
   }, [liveLocation, locationError]);
 
   return (
-    <div className="absolute inset-0 bg-slate-50 flex flex-col overflow-hidden">
+    <div className="absolute inset-0 bg-slate-50 dark:bg-bg flex flex-col overflow-hidden">
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(18px); }
@@ -70,7 +70,7 @@ export default function IssueSelectScreen() {
       `}</style>
 
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none dark:opacity-40"
         style={{
           background:
             "radial-gradient(circle at top,#FFF2E9 0%,transparent 45%)",
@@ -86,14 +86,14 @@ export default function IssueSelectScreen() {
             h-11 w-11 sm:h-12 sm:w-12
             shrink-0
             rounded-2xl
-            bg-white
+            bg-white dark:bg-card
             border
-            border-slate-100
+            border-slate-100 dark:border-line
             shadow-lg
             flex
             items-center
             justify-center
-            text-slate-700
+            text-slate-700 dark:text-text
             active:scale-90
             transition-transform
           "
@@ -101,7 +101,7 @@ export default function IssueSelectScreen() {
             <ArrowLeft size={20} />
           </button>
 
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 truncate">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-text truncate">
             Kya problem hai?
           </h1>
         </div>
@@ -116,17 +116,17 @@ export default function IssueSelectScreen() {
               inline-flex
               items-center
               gap-1.5
-              bg-white
+              bg-white dark:bg-card
               rounded-2xl
               px-3.5 py-2
               shadow-lg
               border
-              border-slate-100
+              border-slate-100 dark:border-line
               max-w-full
             "
             >
-              <MapPin size={15} className="text-orange-500 shrink-0" />
-              <span className="text-xs font-semibold text-slate-700 truncate">
+              <MapPin size={15} className="text-orange-500 dark:text-accent shrink-0" />
+              <span className="text-xs font-semibold text-slate-700 dark:text-text truncate">
                 {locationLabel}
               </span>
             </div>
@@ -155,8 +155,8 @@ export default function IssueSelectScreen() {
                   active:scale-[0.98]
                   ${
                     isSelected
-                      ? "border-orange-500 bg-orange-50/60 shadow-orange-100"
-                      : "border-slate-100 bg-white hover:border-orange-200 hover:shadow-xl"
+                      ? "border-orange-500 dark:border-accent bg-orange-50/60 dark:bg-accent/10 shadow-orange-100 dark:shadow-none"
+                      : "border-slate-100 dark:border-line bg-white dark:bg-card hover:border-orange-200 dark:hover:border-accent/50 hover:shadow-xl"
                   }
                 `}
                 >
@@ -169,17 +169,17 @@ export default function IssueSelectScreen() {
                     items-center
                     justify-center
                     text-xl sm:text-2xl
-                    ${isSelected ? "bg-orange-100" : "bg-orange-50"}
+                    ${isSelected ? "bg-orange-100 dark:bg-accent/20" : "bg-orange-50 dark:bg-card-2"}
                   `}
                   >
                     {it.emoji}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm sm:text-base font-bold text-slate-900 truncate">
+                    <div className="text-sm sm:text-base font-bold text-slate-900 dark:text-text truncate">
                       {it.name}
                     </div>
-                    <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+                    <div className="text-[11px] sm:text-xs text-slate-500 dark:text-text-dim mt-0.5 truncate">
                       {it.sub}
                     </div>
                   </div>
@@ -187,10 +187,10 @@ export default function IssueSelectScreen() {
                   {isSelected ? (
                     <CheckCircle2
                       size={20}
-                      className="text-orange-500 shrink-0 fill-orange-500 text-white"
+                      className="text-orange-500 dark:text-accent shrink-0 fill-orange-500 dark:fill-accent text-white"
                     />
                   ) : (
-                    <div className="text-xs sm:text-sm text-orange-500 font-bold shrink-0">
+                    <div className="text-xs sm:text-sm text-orange-500 dark:text-accent font-bold shrink-0">
                       {it.price}
                     </div>
                   )}
@@ -216,6 +216,9 @@ export default function IssueSelectScreen() {
         from-slate-50
         via-slate-50/85
         to-transparent
+        dark:from-bg
+        dark:via-bg/85
+        dark:to-transparent
       "
       >
         <div className="max-w-md mx-auto w-full">

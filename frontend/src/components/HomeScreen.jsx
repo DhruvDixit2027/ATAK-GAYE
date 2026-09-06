@@ -12,12 +12,15 @@ import {
   ChevronRight,
   Navigation,
   Siren,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { ISSUES } from "../data/helperPool";
 import { getAddressFromCoords } from "../utils";
 import BottomNav from "./BottomNav";
 import logo from "../assets/atakgaye-logo.png";
+import { useTheme } from "../hooks/useTheme";
 
 const HELPER_MESSAGES = [
   "Main aa raha hoon, aapki madad karne 🙋‍♂️",
@@ -27,6 +30,7 @@ const HELPER_MESSAGES = [
 
 export default function HomeScreen() {
   const { goTo, setSelectedIssue, showToast, liveLocation, locationError } = useApp();
+  const { theme, toggleTheme } = useTheme();
 
   const [locationLabel, setLocationLabel] = useState(
     "Getting your location..."
@@ -111,7 +115,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <div className="absolute inset-0 bg-slate-50 flex flex-col overflow-hidden">
+    <div className="absolute inset-0 bg-slate-50 dark:bg-bg flex flex-col overflow-hidden">
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(18px); }
@@ -196,7 +200,7 @@ export default function HomeScreen() {
       `}</style>
 
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none dark:opacity-40"
         style={{
           background:
             "radial-gradient(circle at top,#FFF2E9 0%,transparent 45%)",
@@ -216,39 +220,65 @@ export default function HomeScreen() {
               rounded-full
               object-cover
               shadow-xl
-              ring-2 ring-white
+              ring-2 ring-white dark:ring-card
             "
             />
 
             <div className="min-w-0 flex-1">
-              <div className="text-lg sm:text-xl font-black tracking-tight text-slate-900 whitespace-nowrap">
+              <div className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-text whitespace-nowrap">
                 Atak Gaye
               </div>
-              <div className="text-[11px] sm:text-xs text-slate-500 truncate">
+              <div className="text-[11px] sm:text-xs text-slate-500 dark:text-text-dim truncate">
                 Emergency Road Assistance
               </div>
             </div>
 
-            {/* Location pill moved inline with header to save a row */}
+            {/* Location pill */}
             <div
               className="
-              bg-white
+              bg-white dark:bg-card
               rounded-2xl
               px-2.5 py-1.5
               shadow-lg
               border
-              border-slate-100
+              border-slate-100 dark:border-line
               max-w-[42%]
               shrink-0
             "
             >
               <div className="flex items-center gap-1">
                 <MapPin size={13} className="text-orange-500 shrink-0" />
-                <div className="text-[10px] font-semibold text-slate-700 truncate">
+                <div className="text-[10px] font-semibold text-slate-700 dark:text-text truncate">
                   {locationLabel}
                 </div>
               </div>
             </div>
+
+            {/* Dark/Light mode toggle */}
+            <button
+              onClick={toggleTheme}
+              className="
+              shrink-0
+              w-9 h-9
+              rounded-full
+              bg-white dark:bg-card
+              shadow-lg
+              border
+              border-slate-100 dark:border-line
+              flex
+              items-center
+              justify-center
+              active:scale-90
+              transition-all
+            "
+              aria-label="Toggle dark mode"
+            >
+              {theme === "light" ? (
+                <Moon size={15} className="text-slate-600" />
+              ) : (
+                <Sun size={15} className="text-accent-2" />
+              )}
+            </button>
           </div>
 
           {/* Hero */}
@@ -257,14 +287,14 @@ export default function HomeScreen() {
             fade-in-up delay-2
             mt-3 sm:mt-4
             rounded-2xl sm:rounded-3xl
-            bg-white
+            bg-white dark:bg-card
             p-4 sm:p-5
             shadow-xl
             border
-            border-slate-100
+            border-slate-100 dark:border-line
           "
           >
-            <div className="text-xs text-slate-500">{greeting.title}</div>
+            <div className="text-xs text-slate-500 dark:text-text-dim">{greeting.title}</div>
 
             <h1
               className="
@@ -272,17 +302,17 @@ export default function HomeScreen() {
               text-2xl sm:text-3xl
               font-black
               leading-tight
-              text-slate-900
+              text-slate-900 dark:text-text
             "
             >
               Stuck on the road?
             </h1>
 
-            <div className="mt-1.5 text-orange-500 font-bold text-base sm:text-lg">
+            <div className="mt-1.5 text-orange-500 dark:text-accent font-bold text-base sm:text-lg">
               We're just one tap away.
             </div>
 
-            <div className="mt-2 text-slate-500 leading-5 text-xs sm:text-sm">
+            <div className="mt-2 text-slate-500 dark:text-text-dim leading-5 text-xs sm:text-sm">
               {greeting.subtitle}
             </div>
           </div>
@@ -293,11 +323,11 @@ export default function HomeScreen() {
             fade-in-up delay-3
             mt-3
             rounded-2xl
-            bg-white
+            bg-white dark:bg-card
             p-3 sm:p-3.5
             shadow-lg
             border
-            border-slate-100
+            border-slate-100 dark:border-line
             overflow-hidden
           "
           >
@@ -327,18 +357,18 @@ export default function HomeScreen() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <div className="text-xs sm:text-sm font-bold text-slate-900">
+                <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-text">
                   Madad raaste mein hai
                 </div>
                 <div
                   key={helperMsgIndex}
-                  className="helper-msg-in text-[11px] sm:text-xs text-slate-500 truncate"
+                  className="helper-msg-in text-[11px] sm:text-xs text-slate-500 dark:text-text-dim truncate"
                 >
                   {HELPER_MESSAGES[helperMsgIndex]}
                 </div>
               </div>
 
-              <div className="shrink-0 bg-green-50 text-green-600 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full">
+              <div className="shrink-0 bg-green-50 dark:bg-safe/15 text-green-600 dark:text-safe text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full">
                 ON THE WAY
               </div>
             </div>
@@ -356,12 +386,12 @@ export default function HomeScreen() {
               "
               />
               <div className="helper-walk absolute top-1/2 -translate-y-1/2">
-                <Car size={16} className="text-orange-500" />
+                <Car size={16} className="text-orange-500 dark:text-accent" />
               </div>
             </div>
           </div>
 
-          {/* Live location — compact version */}
+          {/* Live location — compact version (already dark, works in both modes) */}
           <div
             className="
             fade-in-up delay-4
@@ -442,13 +472,12 @@ export default function HomeScreen() {
             </div>
           </div>
 
-          {/* SOS */}
+          {/* SOS — already high-contrast red, works in both modes */}
           <div className="pop-in delay-5 mt-6 sm:mt-7 flex justify-center">
             <button
               onClick={() => openIssue(null)}
               className="relative active:scale-90 transition-transform"
             >
-              {/* soft glow halo, synced to the same 2.4s cycle as the button's breathing */}
               <div
                 className="
                 absolute
@@ -459,7 +488,6 @@ export default function HomeScreen() {
                 sos-halo
               "
               />
-              {/* slow-rotating dashed alert ring — distinct signature, doesn't compete for attention */}
               <div
                 className="
                 absolute
@@ -501,33 +529,33 @@ export default function HomeScreen() {
           </div>
 
           <div className="fade-in-up delay-6 mt-2.5 text-center">
-            <p className="text-slate-600 text-[11px] sm:text-xs">
+            <p className="text-slate-600 dark:text-text-dim text-[11px] sm:text-xs">
               Tap the SOS button for immediate roadside assistance.
             </p>
           </div>
 
-          {/* Stats — compact inline strip instead of tall cards */}
-          <div className="fade-in-up delay-6 mt-4 sm:mt-5 bg-white rounded-2xl shadow-lg border border-slate-100 flex items-center divide-x divide-slate-100">
+          {/* Stats — compact inline strip */}
+          <div className="fade-in-up delay-6 mt-4 sm:mt-5 bg-white dark:bg-card rounded-2xl shadow-lg border border-slate-100 dark:border-line flex items-center divide-x divide-slate-100 dark:divide-line">
             <div className="flex-1 flex flex-col items-center py-2.5">
-              <Clock3 className="text-orange-500" size={16} />
-              <div className="mt-1 text-sm font-black text-slate-900">2m</div>
-              <div className="text-slate-500 text-[9px] leading-tight">
+              <Clock3 className="text-orange-500 dark:text-accent" size={16} />
+              <div className="mt-1 text-sm font-black text-slate-900 dark:text-text">2m</div>
+              <div className="text-slate-500 dark:text-text-dim text-[9px] leading-tight">
                 Avg Response
               </div>
             </div>
             <div className="flex-1 flex flex-col items-center py-2.5">
-              <Star className="text-yellow-500" size={16} />
-              <div className="mt-1 text-sm font-black text-slate-900">4.9</div>
-              <div className="text-slate-500 text-[9px] leading-tight">
+              <Star className="text-yellow-500 dark:text-accent-2" size={16} />
+              <div className="mt-1 text-sm font-black text-slate-900 dark:text-text">4.9</div>
+              <div className="text-slate-500 dark:text-text-dim text-[9px] leading-tight">
                 Rating
               </div>
             </div>
             <div className="flex-1 flex flex-col items-center py-2.5">
-              <ShieldCheck className="text-green-600" size={16} />
-              <div className="mt-1 text-sm font-black text-slate-900">
+              <ShieldCheck className="text-green-600 dark:text-safe" size={16} />
+              <div className="mt-1 text-sm font-black text-slate-900 dark:text-text">
                 500+
               </div>
-              <div className="text-slate-500 text-[9px] leading-tight">
+              <div className="text-slate-500 dark:text-text-dim text-[9px] leading-tight">
                 Helpers
               </div>
             </div>
@@ -536,13 +564,13 @@ export default function HomeScreen() {
           {/* Quick Help */}
           <div className="mt-5 sm:mt-6">
             <div className="flex items-center justify-between mb-2.5">
-              <h2 className="text-base sm:text-lg font-black text-slate-900">
+              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-text">
                 Quick Help
               </h2>
               <button
                 onClick={() => openIssue(null)}
                 className="
-                text-orange-500
+                text-orange-500 dark:text-accent
                 text-xs
                 font-bold
                 flex
@@ -572,22 +600,22 @@ export default function HomeScreen() {
                   key={item.id}
                    onClick={() => openIssue(item.id)}
                    style={{ animationDelay: `${0.7 + index * 0.1}s` }}
-                     className="fade-in-up bg-white rounded-2xl p-3 sm:p-3.5 shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all min-w-0 cursor-pointer"
+                     className="fade-in-up bg-white dark:bg-card-2 rounded-2xl p-3 sm:p-3.5 shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all min-w-0 cursor-pointer"
 >
-                    <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
+                    <div className="w-9 h-9 rounded-xl bg-orange-50 dark:bg-card flex items-center justify-center text-orange-500 dark:text-accent">
                       {icons[index]}
                     </div>
-                    <div className="mt-2 text-xs sm:text-sm font-bold text-slate-900 truncate">
+                    <div className="mt-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-text truncate">
                       {item.name}
                     </div>
-                    <div className="mt-1 text-[10px] sm:text-xs text-slate-500 leading-4 line-clamp-2">
+                    <div className="mt-1 text-[10px] sm:text-xs text-slate-500 dark:text-text-dim leading-4 line-clamp-2">
                       {item.sub}
                     </div>
                     <div className="mt-2 flex items-center justify-between">
-                      <span className="text-orange-500 font-semibold text-[11px] sm:text-xs">
+                      <span className="text-orange-500 dark:text-accent font-semibold text-[11px] sm:text-xs">
                         Get Help
                       </span>
-                      <ChevronRight className="text-orange-500" size={14} />
+                      <ChevronRight className="text-orange-500 dark:text-accent" size={14} />
                     </div>
                   </div>
                 );
@@ -595,7 +623,7 @@ export default function HomeScreen() {
             </div>
           </div>
 
-          {/* Emergency Card — compact slim bar instead of tall card */}
+          {/* Emergency Card — already high-contrast green, works in both modes */}
           <div
             className="
             fade-in-up delay-9

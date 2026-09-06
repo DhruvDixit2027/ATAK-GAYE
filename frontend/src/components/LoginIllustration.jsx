@@ -74,13 +74,19 @@ export default function LoginIllustration() {
           position:absolute; bottom:40px; left:0; right:0; height:2px;
           background:repeating-linear-gradient(90deg, #e3c3a3 0 14px, transparent 14px 26px);
         }
+        .dark .li-ground{
+          background:repeating-linear-gradient(90deg, rgba(255,193,69,0.35) 0 14px, transparent 14px 26px);
+        }
         .li-dot{ position:absolute; border-radius:50%; background:#FBD9BE; opacity:.7; }
         .li-d1{ width:26px; height:26px; top:8px; left:36px; }
         .li-d2{ width:14px; height:14px; top:34px; right:60px; }
         .li-d3{ width:8px; height:8px; top:64px; right:30px; background:#F4763A; }
+        .dark .li-d1, .dark .li-d2{ background:rgba(255,106,61,0.22); }
+        .dark .li-d3{ background:#FF6A3D; opacity:.9; }
 
         .li-rider{ position:absolute; bottom:38px; width:150px; }
         .li-rider img{ width:100%; display:block; filter:drop-shadow(0 8px 10px rgba(0,0,0,.18)); }
+        .dark .li-rider img{ filter:drop-shadow(0 8px 14px rgba(0,0,0,.5)); }
 
         #li-rider1{ left:0; animation: li-r1move 9s infinite; }
         #li-rider2{ left:0; animation: li-r2move 9s cubic-bezier(.22,.9,.32,1) infinite; }
@@ -95,6 +101,9 @@ export default function LoginIllustration() {
           display:flex; align-items:center; gap:6px; max-width:172px;
           background:#fff; border:2px solid #F4763A; border-radius:16px;
           padding:6px 10px 6px 8px; box-shadow:0 6px 14px rgba(0,0,0,.12);
+        }
+        .dark .li-speech{
+          box-shadow:0 6px 18px rgba(0,0,0,.4);
         }
         .li-speech::after{
           content:""; position:absolute; bottom:-8px; left:20px;

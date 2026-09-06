@@ -10,6 +10,7 @@ import RequestHistoryScreen from "./components/RequestHistoryScreen";
 import ProfileScreen from "./components/ProfileScreen";
 import LoginScreen from "./components/LoginScreen"; // 👈 NAYA
 import PaymentScreen from "./components/PaymentScreen"; // 👈 NAYA
+import { useTheme } from "./hooks/useTheme"; // 👈 NAYA — dark mode
 
 function ScreenRouter() {
   const { screen, user, verifiedPhone } = useApp();
@@ -34,7 +35,7 @@ function ScreenRouter() {
       return <TrackingScreen />;
     case "payment":
       return <PaymentScreen />;
-  
+
     case "done":
       return <DoneScreen />;
     case "requests":
@@ -49,10 +50,14 @@ function ScreenRouter() {
 }
 
 export default function App() {
+  // 👇 NAYA: app boot hote hi saved theme (dark/light) turant apply ho jaaye —
+  // isse Login/UserDetails jaise screens bhi shuru se sahi theme mein khulti hain,
+  // sirf Home screen render hone ka wait nahi karna padta.
+  useTheme();
+
   // App khulte hi backend ko "jagane" ka ping — Render free tier
   // 15 min inactivity ke baad sleep ho jaata hai, isse jab tak
   // user phone number type kare, server ready ho chuka hota hai.
-
 
   return (
     <AppProvider>

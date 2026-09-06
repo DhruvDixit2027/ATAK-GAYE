@@ -147,9 +147,9 @@ export default function LoginScreen() {
   };
 
   return (
-    <div className="absolute inset-0 bg-slate-50 flex flex-col overflow-hidden">
+    <div className="absolute inset-0 bg-slate-50 dark:bg-bg flex flex-col overflow-hidden">
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none dark:opacity-40"
         style={{
           background: "radial-gradient(circle at top,#FFF2E9 0%,transparent 45%)",
         }}
@@ -162,21 +162,21 @@ export default function LoginScreen() {
             <div className="w-full max-w-[320px]">
               <LoginIllustration />
             </div>
-            <div className="text-xl font-black text-slate-900">Atak Gaye</div>
-            <div className="text-xs text-slate-500 mt-1">
+            <div className="text-xl font-black text-slate-900 dark:text-text">Atak Gaye</div>
+            <div className="text-xs text-slate-500 dark:text-text-dim mt-1">
               {step === "phone" ? "Login karne ke liye phone number daalo" : "OTP daalke verify karo"}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-100">
+          <div className="bg-white dark:bg-card rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-100 dark:border-line">
             {step === "phone" ? (
               <div>
-                <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 mb-1.5 ml-1">
-                  <Phone size={13} className="text-orange-500" /> Phone number
+                <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 dark:text-text-dim mb-1.5 ml-1">
+                  <Phone size={13} className="text-orange-500 dark:text-accent" /> Phone number
                 </div>
                 <input
                   type="tel"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition-all"
+                  className="w-full bg-slate-50 dark:bg-bg border border-slate-200 dark:border-line rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-text outline-none focus:border-orange-300 dark:focus:border-accent focus:ring-2 focus:ring-orange-100 dark:focus:ring-accent/20 transition-all"
                   placeholder="10 digit phone number"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -186,30 +186,30 @@ export default function LoginScreen() {
               <div>
                 <button
                   onClick={handleBackToPhone}
-                  className="flex items-center gap-1 text-xs text-slate-500 font-semibold mb-3"
+                  className="flex items-center gap-1 text-xs text-slate-500 dark:text-text-dim font-semibold mb-3"
                 >
                   <ArrowLeft size={13} /> Number badlo
                 </button>
 
                 {devOtp && (
-                  <div className="bg-orange-50 border border-orange-100 rounded-xl px-4 py-3 mb-4 text-center">
-                    <div className="text-[11px] text-slate-500 mb-1">
+                  <div className="bg-orange-50 dark:bg-accent/10 border border-orange-100 dark:border-accent/40 rounded-xl px-4 py-3 mb-4 text-center">
+                    <div className="text-[11px] text-slate-500 dark:text-text-dim mb-1">
                       Testing mode — tumhara OTP:
                     </div>
-                    <div className="text-2xl font-black tracking-widest text-orange-600">
+                    <div className="text-2xl font-black tracking-widest text-orange-600 dark:text-accent">
                       {devOtp}
                     </div>
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 mb-1.5 ml-1">
-                  <ShieldCheck size={13} className="text-orange-500" /> OTP daalo
+                <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 dark:text-text-dim mb-1.5 ml-1">
+                  <ShieldCheck size={13} className="text-orange-500 dark:text-accent" /> OTP daalo
                 </div>
                 <input
                   type="text"
                   inputMode="numeric"
                   maxLength={6}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition-all tracking-widest text-center text-lg font-bold"
+                  className="w-full bg-slate-50 dark:bg-bg border border-slate-200 dark:border-line rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-text outline-none focus:border-orange-300 dark:focus:border-accent focus:ring-2 focus:ring-orange-100 dark:focus:ring-accent/20 transition-all tracking-widest text-center text-lg font-bold"
                   placeholder="6 digit OTP"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
@@ -219,7 +219,7 @@ export default function LoginScreen() {
           </div>
 
           {loading && slowServer && (
-            <div className="flex items-center gap-2 text-[11px] text-orange-600 font-medium mt-3 ml-1">
+            <div className="flex items-center gap-2 text-[11px] text-orange-600 dark:text-accent-2 font-medium mt-3 ml-1">
               <RotateCw size={12} className="animate-spin" />
               Server jaag raha hai, thoda ruko...
             </div>
@@ -227,14 +227,14 @@ export default function LoginScreen() {
 
           {error && (
             <div className="flex items-center justify-between gap-2 mt-3 ml-1">
-              <div className="flex items-center gap-1.5 text-red-500 text-xs font-medium">
+              <div className="flex items-center gap-1.5 text-red-500 dark:text-danger text-xs font-medium">
                 {isNetworkError && <WifiOff size={13} />}
                 {error}
               </div>
               {isNetworkError && (
                 <button
                   onClick={handleRetry}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-orange-600 dark:text-accent-2 bg-orange-50 dark:bg-accent/15 px-2.5 py-1 rounded-lg"
                 >
                   <RotateCw size={11} /> Dubara try karo
                 </button>

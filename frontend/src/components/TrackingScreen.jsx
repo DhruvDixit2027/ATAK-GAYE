@@ -205,18 +205,18 @@ export default function TrackingScreen() {
 
   if (requestStatus === "pending") {
     return (
-      <div className="absolute inset-0 bg-slate-50 flex flex-col items-center justify-center px-8 text-center">
+      <div className="absolute inset-0 bg-slate-50 dark:bg-bg flex flex-col items-center justify-center px-8 text-center">
         <style>{`
           @keyframes softPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: 0.7; } }
           .soft-pulse { animation: softPulse 1.8s ease-in-out infinite; }
         `}</style>
-        <div className="soft-pulse w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mb-6">
-          <div className="w-9 h-9 rounded-full border-[3px] border-orange-400 border-t-transparent animate-spin" />
+        <div className="soft-pulse w-16 h-16 rounded-full bg-orange-100 dark:bg-accent/15 flex items-center justify-center mb-6">
+          <div className="w-9 h-9 rounded-full border-[3px] border-orange-400 dark:border-accent border-t-transparent animate-spin" />
         </div>
-        <div className="text-lg font-black text-slate-900 mb-2">
+        <div className="text-lg font-black text-slate-900 dark:text-text mb-2">
           Helper ka jawab ka wait kar rahe hain...
         </div>
-        <div className="text-sm text-slate-500 max-w-xs">
+        <div className="text-sm text-slate-500 dark:text-text-dim max-w-xs">
           Aapki request bhej di gayi hai. Jaise hi helper accept karega, tracking shuru ho jaayegi.
         </div>
       </div>
@@ -225,12 +225,12 @@ export default function TrackingScreen() {
 
   if (requestStatus === "rejected") {
     return (
-      <div className="absolute inset-0 bg-slate-50 flex flex-col items-center justify-center px-8 text-center">
+      <div className="absolute inset-0 bg-slate-50 dark:bg-bg flex flex-col items-center justify-center px-8 text-center">
         <div className="text-5xl mb-4">😔</div>
-        <div className="text-lg font-black text-slate-900 mb-2">
+        <div className="text-lg font-black text-slate-900 dark:text-text mb-2">
           Helper ne request reject kar di
         </div>
-        <div className="text-sm text-slate-500 mb-6 max-w-xs">
+        <div className="text-sm text-slate-500 dark:text-text-dim mb-6 max-w-xs">
           Koi baat nahi — dusra helper dhundte hain aapke liye.
         </div>
         <button
@@ -245,7 +245,7 @@ export default function TrackingScreen() {
   }
 
   return (
-    <div className="absolute inset-0 bg-slate-50 flex flex-col overflow-hidden">
+    <div className="absolute inset-0 bg-slate-50 dark:bg-bg flex flex-col overflow-hidden">
       <style>{`
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in-up { opacity: 0; animation: fadeInUp 0.5s ease-out forwards; }
@@ -255,7 +255,7 @@ export default function TrackingScreen() {
         .helper-vehicle-icon { background: transparent; border: none; }
       `}</style>
 
-      {/* Blinkit-jaisa bold banner top pe */}
+      {/* Blinkit-jaisa bold banner top pe — orange, dono modes mein same rehta hai */}
       <div className="relative z-[1001] px-4 sm:px-5 pt-8 sm:pt-10 pb-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white shrink-0">
         <div className="flex items-center justify-between">
           <div className="text-xs font-bold uppercase tracking-wide opacity-90">
@@ -278,8 +278,8 @@ export default function TrackingScreen() {
         )}
       </div>
 
-      {/* Map — banner ke neeche thoda overlap karke rounded card jaisa */}
-      <div className="relative -mt-4 mx-3 rounded-3xl overflow-hidden shadow-xl h-[230px] shrink-0 z-[1000]">
+      {/* Map — banner ke neeche thoda overlap karke rounded card jaisa (tiles jaan-boojh kar dark nahi kiye, alag tile provider chahiye hoga) */}
+      <div className="relative -mt-4 mx-3 rounded-3xl overflow-hidden shadow-xl h-[230px] shrink-0 z-[1000] ring-1 ring-black/0 dark:ring-line">
         {userPos ? (
           <MapContainer
             center={userPos}
@@ -314,7 +314,7 @@ export default function TrackingScreen() {
             <FitBounds userPos={userPos} helperPos={helperPos} />
           </MapContainer>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-sm text-slate-400 bg-slate-100">
+          <div className="w-full h-full flex items-center justify-center text-sm text-slate-400 dark:text-text-dim bg-slate-100 dark:bg-card">
             Location la rahe hain...
           </div>
         )}
@@ -322,85 +322,85 @@ export default function TrackingScreen() {
 
       <div className="relative flex-1 overflow-y-auto pb-6">
         <div className="px-4 sm:px-5 max-w-md mx-auto w-full">
-          <div className="fade-in-up inline-flex items-center gap-1.5 text-[10.5px] font-bold text-green-700 bg-green-50 px-2.5 py-1 rounded-full mt-4 mb-3">
+          <div className="fade-in-up inline-flex items-center gap-1.5 text-[10.5px] font-bold text-green-700 dark:text-safe bg-green-50 dark:bg-safe/15 px-2.5 py-1 rounded-full mt-4 mb-3">
             🤖 AI ne is helper ko sabse best match chuna
           </div>
 
-          <div className="fade-in-up bg-white rounded-2xl p-4 shadow-lg border border-slate-100" style={{ animationDelay: "0.05s" }}>
+          <div className="fade-in-up bg-white dark:bg-card rounded-2xl p-4 shadow-lg border border-slate-100 dark:border-line" style={{ animationDelay: "0.05s" }}>
             <div className="flex items-center gap-3">
               <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-black bg-gradient-to-br from-orange-400 to-orange-500 text-white shadow-md shrink-0">
                 {w.init}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-base font-black text-slate-900 truncate">{w.name}</div>
-                <div className="text-xs text-slate-500 mt-0.5">
+                <div className="text-base font-black text-slate-900 dark:text-text truncate">{w.name}</div>
+                <div className="text-xs text-slate-500 dark:text-text-dim mt-0.5">
                   ⭐ {w.rating} · {w.vehicle}
                 </div>
                 {helperVehicleNumber && (
-                  <div className="text-[11px] text-slate-400 mt-0.5">
+                  <div className="text-[11px] text-slate-400 dark:text-text-dim/70 mt-0.5">
                     🔢 {helperVehicleNumber}
                   </div>
                 )}
               </div>
               {liveDistanceKm != null && (
                 <div className="shrink-0 text-right">
-                  <div className="text-sm font-black text-orange-500">{liveDistanceKm} km</div>
-                  <div className="text-[9px] text-slate-400">door</div>
+                  <div className="text-sm font-black text-orange-500 dark:text-accent">{liveDistanceKm} km</div>
+                  <div className="text-[9px] text-slate-400 dark:text-text-dim">door</div>
                 </div>
               )}
             </div>
             <div className="flex gap-2.5 mt-4">
               <div
                 onClick={() => showToast("💬 Chat khul gayi (demo)")}
-                className="flex-1 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-transform text-slate-700"
+                className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-line bg-slate-50 dark:bg-card-2 text-sm font-semibold flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-transform text-slate-700 dark:text-text"
               >
                 <MessageCircle size={16} /> Chat
               </div>
 
               <a href={helperPhone ? `tel:${helperPhone}` : undefined}
                 onClick={() => !helperPhone && showToast("📞 Phone number nahi mila")}
-                className="flex-1 py-3 rounded-xl bg-green-500 text-white text-sm font-semibold flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-transform no-underline"
+                className="flex-1 py-3 rounded-xl bg-green-500 dark:bg-safe text-white text-sm font-semibold flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-transform no-underline"
               >
                 <Phone size={16} /> Call
               </a>
             </div>
           </div>
 
-          <div className="fade-in-up bg-orange-50 border border-dashed border-orange-300 rounded-2xl px-4 py-3.5 mt-3 flex items-center justify-between" style={{ animationDelay: "0.1s" }}>
-            <div className="text-xs text-orange-700 font-medium">Helper ko yeh OTP dikhaayein</div>
-            <div className="text-2xl font-black tracking-[6px] text-orange-500">{realOtp}</div>
+          <div className="fade-in-up bg-orange-50 dark:bg-accent/10 border border-dashed border-orange-300 dark:border-accent/50 rounded-2xl px-4 py-3.5 mt-3 flex items-center justify-between" style={{ animationDelay: "0.1s" }}>
+            <div className="text-xs text-orange-700 dark:text-accent-2 font-medium">Helper ko yeh OTP dikhaayein</div>
+            <div className="text-2xl font-black tracking-[6px] text-orange-500 dark:text-accent">{realOtp}</div>
           </div>
 
           <div className="fade-in-up mt-5" style={{ animationDelay: "0.15s" }}>
             <div className="flex gap-3 mb-4">
               <div className="flex flex-col items-center">
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
-                <div className="w-0.5 flex-1 bg-green-500 my-1" />
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500 dark:bg-safe" />
+                <div className="w-0.5 flex-1 bg-green-500 dark:bg-safe my-1" />
               </div>
               <div>
-                <div className="text-sm font-bold text-slate-900">Request confirm ho gayi</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">Just now</div>
+                <div className="text-sm font-bold text-slate-900 dark:text-text">Request confirm ho gayi</div>
+                <div className="text-[11px] text-slate-400 dark:text-text-dim mt-0.5">Just now</div>
               </div>
             </div>
             <div className="flex gap-3 mb-4">
               <div className="flex flex-col items-center">
-                <div className={`w-2.5 h-2.5 rounded-full ${arrived ? "bg-green-500" : "bg-orange-400"}`} />
-                <div className={`w-0.5 flex-1 my-1 ${arrived ? "bg-green-500" : "bg-slate-200"}`} />
+                <div className={`w-2.5 h-2.5 rounded-full ${arrived ? "bg-green-500 dark:bg-safe" : "bg-orange-400 dark:bg-accent"}`} />
+                <div className={`w-0.5 flex-1 my-1 ${arrived ? "bg-green-500 dark:bg-safe" : "bg-slate-200 dark:bg-line"}`} />
               </div>
               <div>
-                <div className="text-sm font-bold text-slate-900">{firstName} aapki taraf aa raha hai</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
+                <div className="text-sm font-bold text-slate-900 dark:text-text">{firstName} aapki taraf aa raha hai</div>
+                <div className="text-[11px] text-slate-400 dark:text-text-dim mt-0.5">
                   {arrived ? `${firstName} pahunch gaya!` : `ETA ${etaText} min`}
                 </div>
               </div>
             </div>
             <div className="flex gap-3">
               <div className="flex flex-col items-center">
-                <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                <div className="w-2.5 h-2.5 rounded-full bg-slate-200 dark:bg-line" />
               </div>
               <div>
-                <div className="text-sm font-bold text-slate-900">Madad complete</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
+                <div className="text-sm font-bold text-slate-900 dark:text-text">Madad complete</div>
+                <div className="text-[11px] text-slate-400 dark:text-text-dim mt-0.5">
                   {arrived ? "Helper OTP verify karega" : "Pending"}
                 </div>
               </div>
