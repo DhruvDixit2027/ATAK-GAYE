@@ -48,6 +48,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () => { // 👈 NAYA: app.listen ki jagah httpServer.listen (socket.io ke liye zaroori)
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
